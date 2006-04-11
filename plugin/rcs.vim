@@ -5,7 +5,7 @@
 "
 "------------------------------------------------------------------------------
 "
-" $Id: rcs.vim,v 1.19 2004/04/17 01:52:18 infynity Exp $
+" $Id: rcs.vim,v 1.19 2004/04/17 01:52:18 infynity Exp infynity $
 "
 " Log: {{{1
 "
@@ -272,7 +272,7 @@ function! s:RCS_CheckOut(file, mode)  " {{{2
 
 	let eventignore_save = &eventignore
 	let &eventignore = 'BufUnload,FileChangedRO'
-	execute "silent e! %"
+	execute "silent e!"
 	let &eventignore = eventignore_save
 endfunction
 
@@ -319,7 +319,7 @@ function! s:RCS_CheckIn(file, ...)  " {{{2
 
 	let eventignore_save = &eventignore
 	let &eventignore = 'BufUnload,FileChangedRO'
-	execute "silent e! %"
+	execute "silent e!"
 	let &eventignore = eventignore_save
 endfunction
 " }}}1
