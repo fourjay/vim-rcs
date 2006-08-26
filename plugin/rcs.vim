@@ -5,11 +5,17 @@
 "
 "------------------------------------------------------------------------------
 "
-" $Id: rcs.vim,v 1.19 2004/04/17 01:52:18 infynity Exp infynity $
+" $Id: rcs.vim,v 1.21 2006/08/23 04:05:17 infynity Exp $
 "
 " Log: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.21  2006/08/23 04:05:17  infynity
+" Perserve cursor position when reloading the buffer after calling co/ci.
+"
+" Revision 1.20  2006/08/14 07:02:17  infynity
+" Changed for Vim7 compatibility.
+"
 " Revision 1.19  2004/04/17 01:52:18  infynity
 " Added copyright information.
 "
@@ -272,7 +278,10 @@ function! s:RCS_CheckOut(file, mode)  " {{{2
 
 	let eventignore_save = &eventignore
 	let &eventignore = 'BufUnload,FileChangedRO'
+	let l = line(".")
+	let c = col(".")
 	execute "silent e!"
+	call cursor(l, c)
 	let &eventignore = eventignore_save
 endfunction
 
@@ -319,7 +328,10 @@ function! s:RCS_CheckIn(file, ...)  " {{{2
 
 	let eventignore_save = &eventignore
 	let &eventignore = 'BufUnload,FileChangedRO'
+	let l = line(".")
+	let c = col(".")
 	execute "silent e!"
+	call cursor(l, c)
 	let &eventignore = eventignore_save
 endfunction
 " }}}1
