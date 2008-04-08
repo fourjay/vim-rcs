@@ -1,15 +1,70 @@
 " rcs.vim -- Automatically handle RCS controlled files.
 "
-" Copyright (C) 2002-2004  Christian J. Robinson <infynity@onewest.net>
+" Copyright (C) 2002-2008  Christian J. Robinson <infynity@onewest.net>
 " Distributed under the terms of the Vim license.  See ":help license".
 "
 "------------------------------------------------------------------------------
 "
-" $Id: rcs.vim,v 1.21 2006/08/23 04:05:17 infynity Exp $
+" This is a set of autocommands, commands, and a menu to help you handle RCS
+" controlled files.
+" 
+" If you try to modify a readonly file that has a RCS/<file>,v counterpart you
+" will be asked if you want to check the file out for modification, and when
+" you unload the buffer you'll be prompted if you want to check the file back
+" in, and allowed to enter a log message.
+" 
+" The commands have corresponding menu items, which should be fairly
+" self-explanatory.
+"
+" Commands:
+" 
+"  :RCSdiff   --  View the differences between the working file and the last
+"                 revision, using vimdiff.
+" 
+"  :RCSlog    --  Show the entire log file, syntax highlighted, in a split
+"                 window.
+"  
+"  :RCSco ro  --  Check out the current file readonly (unlocked).
+"
+"  :RCSco w   --  Check out the current file writable (locked).
+"  
+"    The ":RCSco" command will ask if you want to discard changes if you
+"    already have a locked/modifiable file.
+"  
+"  :RCSci     --  Check the current (changed) file in, you will be prompted
+"                 for a log message, and the file will automatically be
+"                 checked back out readonly.
+"  
+"
+" Configuration Variables: 
+"
+"  g:rcs_plugin_toplevel_menu  --  The name of the menu to place the RCS menu
+"                                  into, if you don't want it at the top level.
+"
+"  g:rcs_plugin_menu_priority  --  The menu priority to use for the RCS menu.
+"
+"  g:rcs_plugin_menu_force     --  Force loading of the menu in console Vim.
+"
+"  Examples:
+" 
+"   :let g:rcs_plugin_toplevel_menu = '&Misc'
+"   :let g:rcs_plugin_menu_priority = '130.10'
+"   :let g:rcs_plugin_menu_force = 1
+"
+"------------------------------------------------------------------------------
+"
+" $Id: rcs.vim,v 1.23 2008/04/08 16:19:43 infynity Exp infynity $
 "
 " Log: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.23  2008/04/08 16:19:43  infynity
+" Internal documentation added
+" Code clean up
+"
+" Revision 1.22  2007/08/08 04:16:45  infynity
+" FIleChangedRO autocmd opens folds -- possibly undesirable
+"
 " Revision 1.21  2006/08/23 04:05:17  infynity
 " Perserve cursor position when reloading the buffer after calling co/ci.
 "
@@ -101,20 +156,34 @@ if ! exists("g:loaded_rcs_plugin_menu")
 			let g:rcs_plugin_menu_priority = ''
 		endif
 
-		" exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.10 ' . g:rcs_plugin_toplevel_menu .
+		let s:m = g:rcs_plugin_toplevel_menu
+		let s:p = g:rcs_plugin_menu_priority
+
+		if s:m[-1:] != '.'
+			let s:m = s:m . '.'
+		endif
+
+		if s:p[-1:] != '.'
+			let s:p = s:p . '.'
+		endif
+
+
+		" exe 'amenu <silent> ' . s:p . '10 ' . s:m .
 		" 	\ '&RCS.Lock                                  :!rcs -l %<CR>'
-		" exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.20 ' . g:rcs_plugin_toplevel_menu .
+		" exe 'amenu <silent> ' . s:p . '20 ' . s:m .
 		" 	\ '&RCS.UnLock                                :!rcs -u %<CR>'
-		exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.30 ' . g:rcs_plugin_toplevel_menu .
+		exe 'amenu <silent> ' . s:p . '30 ' . s:m .
 			\ '&RCS.&Diff<Tab>:RCSdiff                  :RCSdiff<CR>'
-		exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.40 ' . g:rcs_plugin_toplevel_menu .
+		exe 'amenu <silent> ' . s:p . '40 ' . s:m .
 			\ '&RCS.Show\ &Log<Tab>:RCSlog              :RCSlog<CR>'
-		exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.60 ' . g:rcs_plugin_toplevel_menu .
+		exe 'amenu <silent> ' . s:p . '60 ' . s:m .
 			\ "&RCS.Check\\ Out\\ [&RO]<Tab>:RCSco\\ ro :RCSco ro<CR>"
-		exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.60 ' . g:rcs_plugin_toplevel_menu .
+		exe 'amenu <silent> ' . s:p . '60 ' . s:m .
 			\ "&RCS.Check\\ Out\\ [&W]<Tab>:RCSco\\ w   :RCSco w<CR>"
-		exe 'amenu <silent> ' . g:rcs_plugin_menu_priority . '.70 ' . g:rcs_plugin_toplevel_menu .
+		exe 'amenu <silent> ' . s:p . '70 ' . s:m .
 			\ '&RCS.Check\ &In<Tab>:RCSci               :RCSci<CR>'
+
+		unlet s:m s:p
 	else
 		augroup RCS_plugin_menu
 			au!
@@ -133,24 +202,33 @@ let g:loaded_rcs_plugin = 1
 " Autocommands: {{{1
 augroup RCS_plugin
 au!
-autocmd FileChangedRO * nested
-	\ if filereadable(expand('<afile>:p:h') . '/RCS/' . expand("<afile>:t") . ',v') && (confirm("This is a read-only RCS controlled file, check out?", "&Yes\n&No", 1, "Q") == 1) |
-	\   call s:RCS_CheckOut(expand('<afile>:p'), 1) |
-	\ endif
-
-autocmd BufUnload * nested
-	\ if getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') != '' && (getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') == expand('<afile>:p')) && (confirm(expand('<afile>:t') . " is an RCS controlled file checked out by Vim.\nCheck back in?", "&Yes\n&No", 1, "Q") == 1) |
-	\   call s:RCS_CheckIn(expand('<afile>:p'), 0) |
-	\ endif
+autocmd FileChangedRO * nested call s:FileChangedRO()
+autocmd BufUnload * nested call s:BufUnload()
 augroup END
 
 " Commands: {{{1
-command!          RCSdiff call <SID>RCS_Diff(expand("%:p"))
-command!          RCSlog  call <SID>RCS_ViewLog(expand("%:p"))
-command! -nargs=1 RCSco   call <SID>RCS_CheckOut(expand("%:p"), <f-args>)
-command! -nargs=? RCSci   call <SID>RCS_CheckIn(expand("%:p"))
+command!          RCSdiff call s:RCS_Diff(expand("%:p"))
+command!          RCSlog  call s:RCS_ViewLog(expand("%:p"))
+command! -nargs=1 RCSco   call s:RCS_CheckOut(expand("%:p"), <f-args>)
+command! -nargs=? RCSci   call s:RCS_CheckIn(expand("%:p"))
 
 " Functions: {{{1
+
+function! s:FileChangedRO()  " {{{2
+	if filereadable(expand('<afile>:p:h') . '/RCS/' . expand("<afile>:t") . ',v')
+				\ && (confirm("This is a read-only RCS controlled file, check out?", "&Yes\n&No", 1, "Q") == 1)
+		call s:RCS_CheckOut(expand('<afile>:p'), 1)
+		silent! foldopen!
+	endif
+endfunction
+
+function! s:BufUnload()  " {{{2
+	if getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') != ''
+				\ && (getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') == expand('<afile>:p'))
+				\ && (confirm(expand('<afile>:t') . " is an RCS controlled file checked out by Vim.\nCheck back in?", "&Yes\n&No", 1, "Q") == 1)
+		call s:RCS_CheckIn(expand('<afile>:p'), 0)
+	endif
+endfunction
 
 function! s:RCS_Diff(file)  " {{{2
 	let rcs_diff_name = "[Previous version of " . fnamemodify(a:file, ':t') . "]"
