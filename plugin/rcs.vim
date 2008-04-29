@@ -1,63 +1,134 @@
 " rcs.vim -- Automatically handle RCS controlled files.
 "
+" Author:      Christian J. Robinson <infynity@onewest.net>
+" URL:         http://www.infynity.spodzone.com/vim
+" Last Change: April 29, 2008
+" Version:     0.10
+"
 " Copyright (C) 2002-2008  Christian J. Robinson <infynity@onewest.net>
 " Distributed under the terms of the Vim license.  See ":help license".
 "
-"------------------------------------------------------------------------------
+" Install Details: -----------------------------------------------------------
+"
+" Make the following directories (replace ~/.vim with the appropriate
+" directory if you're on Windows--see ":help 'runtimepath'"):
+"   ~/.vim/plugin
+"   ~/.vim/doc
+"
+" Place this script in the plugin directory, then start Vim. The
+" documentation should automatically be created. Then you can do:
+"   :help rcs.txt
+"
+" Help File: ------------------------------------------------------------ {{{1
+" *rcs.txt*	Assist with editing RCS controlled files.
+"		Author: Christian J. Robinson
+"
+"						*rcs.vim* *rcs*
 "
 " This is a set of autocommands, commands, and a menu to help you handle RCS
-" controlled files.
-" 
+" controlled files.  It requires Vim 7.0 or later to run.
+"
+" ------------------------------------------------------------------------------
+"
+" 1. Introduction				|rcs-intro|
+" 2. Commands				|rcs-commands|
+" 3. Configuration Variables		|rcs-configuration|
+"
+" ==============================================================================
+" 1. Introduction					*rcs-intro*
+"
 " If you try to modify a readonly file that has a RCS/<file>,v counterpart you
 " will be asked if you want to check the file out for modification, and when
 " you unload the buffer you'll be prompted if you want to check the file back
 " in, and allowed to enter a log message.
-" 
+"
 " The commands have corresponding menu items, which should be fairly
 " self-explanatory.
 "
-" Commands:
-" 
-"  :RCSdiff   --  View the differences between the working file and the last
-"                 revision, using vimdiff.
-" 
-"  :RCSlog    --  Show the entire log file, syntax highlighted, in a split
-"                 window.
-"  
-"  :RCSco ro  --  Check out the current file readonly (unlocked).
+" ==============================================================================
+" 2. Commands					*rcs-commands*
 "
-"  :RCSco w   --  Check out the current file writable (locked).
-"  
-"    The ":RCSco" command will ask if you want to discard changes if you
-"    already have a locked/modifiable file.
-"  
-"  :RCSci     --  Check the current (changed) file in, you will be prompted
-"                 for a log message, and the file will automatically be
-"                 checked back out readonly.
-"  
+"							*:RCSdiff*
+" :RCSdiff
+"	View the differences between the working file and the last revision,
+"	using vimdiff.
 "
-" Configuration Variables: 
+"							*:RCSlog*
+" :RCSlog
+"	Show the entire log file--syntax highlighted--in a split window.
+"	Individual log entries can be edited from this display.
 "
-"  g:rcs_plugin_toplevel_menu  --  The name of the menu to place the RCS menu
-"                                  into, if you don't want it at the top level.
+"							*:RCSco*
+" :RCSco ro
+"	Check out the current file readonly (unlocked).
 "
-"  g:rcs_plugin_menu_priority  --  The menu priority to use for the RCS menu.
+" :RCSco w
+"	Check out the current file writable (locked).
 "
-"  g:rcs_plugin_menu_force     --  Force loading of the menu in console Vim.
+"	The ":RCSco" command will ask if you want to discard changes if you
+"	already have a locked/modifiable file.
 "
-"  Examples:
-" 
-"   :let g:rcs_plugin_toplevel_menu = '&Misc'
-"   :let g:rcs_plugin_menu_priority = '130.10'
-"   :let g:rcs_plugin_menu_force = 1
+"							*:RCSci*
+" :RCSci
+"	Check the current (changed) file in, you will be prompted for a log
+"	message, and the file will automatically be checked back out readonly.
 "
-"------------------------------------------------------------------------------
+"							*:RCSUpdateHelp*
+" :RCSUpdateHelp [directory]
+"	Update the help file for this script.  If you specify a directory the help
+"	file will be written there rather than the doc directory relative to where
+"	this script is installed--useful if that directory is the wrong one.
 "
-" $Id: rcs.vim,v 1.23 2008/04/08 16:19:43 infynity Exp infynity $
 "
-" Log: {{{1
+" ==============================================================================
+" 3. Configuration Variables			*rcs-configuration*
+"
+" *g:rcs_plugin_toplevel_menu*
+" The name of the menu to place the RCS menu into, if you don't want it at the
+" top level.
+"
+" *g:rcs_plugin_menu_priority*
+" The menu priority to use for the RCS menu.
+"
+" *g:rcs_plugin_menu_force*
+" Force loading of the menu in console Vim.
+"
+" Examples: >
+"  :let g:rcs_plugin_toplevel_menu = '&Misc'
+"  :let g:rcs_plugin_menu_priority = '130.10'
+"  :let g:rcs_plugin_menu_force = 1
+" <
+" ----------------------------------------------------------------------- }}}1
+"
+" $Id: rcs.vim,v 1.30 2008/04/29 20:36:49 infynity Exp $
+"
+" ChangeLog: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.30  2008/04/29 20:36:49  infynity
+" :RCSUpdateHelp {arg} wasn't working
+"
+" Revision 1.29  2008/04/26 19:47:08  infynity
+" Added the :RCSUpdateHelp [directory] command
+"
+" Revision 1.28  2008/04/17 06:11:32  infynity
+" Delay the helpfile auto-update until Vim has initialized so it won't stop gvim
+"  from starting from a non-terminal
+"
+" Revision 1.27  2008/04/16 03:54:31  infynity
+" Enhanced the log display and editing feature
+" Auto-install a help file if possible
+" Refactoring
+"
+" Revision 1.26  2008/04/15 04:58:53  infynity
+" *** empty log message ***
+"
+" Revision 1.25  2008/04/15 04:55:38  infynity
+" Allow editing of individual revision log messages from the log display
+"
+" Revision 1.24  2008/04/08 16:28:31  infynity
+" *** empty log message ***
+"
 " Revision 1.23  2008/04/08 16:19:43  infynity
 " Internal documentation added
 " Code clean up
@@ -137,9 +208,21 @@
 "
 " }}}1
 
-if v:version < 600
+if v:version < 700
+	echohl ErrorMsg
+	echomsg "Vim 7.0 or greater is needed to run " . expand('<sfile>:p')
+	echohl None
 	finish
 endif
+
+" Auto-update the help file if necessary and possible:  {{{1
+let s:self    = expand('<sfile>')
+let s:selfdoc = expand('<sfile>:p:h:h') . '/doc/' . expand('<sfile>:p:t:r') . '.txt'
+if getftime(s:self) > getftime(s:selfdoc)
+	" Do this /after/ Vim has initialized, because tempname() breaks
+	" otherwise:
+	autocmd VimEnter * RCSUpdateHelp
+endif  " }}}1
 
 let s:savecpo = &cpoptions
 set cpoptions&vim
@@ -167,7 +250,6 @@ if ! exists("g:loaded_rcs_plugin_menu")
 			let s:p = s:p . '.'
 		endif
 
-
 		" exe 'amenu <silent> ' . s:p . '10 ' . s:m .
 		" 	\ '&RCS.Lock                                  :!rcs -l %<CR>'
 		" exe 'amenu <silent> ' . s:p . '20 ' . s:m .
@@ -175,7 +257,7 @@ if ! exists("g:loaded_rcs_plugin_menu")
 		exe 'amenu <silent> ' . s:p . '30 ' . s:m .
 			\ '&RCS.&Diff<Tab>:RCSdiff                  :RCSdiff<CR>'
 		exe 'amenu <silent> ' . s:p . '40 ' . s:m .
-			\ '&RCS.Show\ &Log<Tab>:RCSlog              :RCSlog<CR>'
+			\ '&RCS.Show\ &&\ Edit\ &Log<Tab>:RCSlog    :RCSlog<CR>'
 		exe 'amenu <silent> ' . s:p . '60 ' . s:m .
 			\ "&RCS.Check\\ Out\\ [&RO]<Tab>:RCSco\\ ro :RCSco ro<CR>"
 		exe 'amenu <silent> ' . s:p . '60 ' . s:m .
@@ -195,29 +277,35 @@ endif
 
 if exists("g:loaded_rcs_plugin")
 	let &cpoptions = s:savecpo
+	unlet s:savecpo
 	finish
 endif
 let g:loaded_rcs_plugin = 1
 
 " Autocommands: {{{1
 augroup RCS_plugin
-au!
-autocmd FileChangedRO * nested call s:FileChangedRO()
-autocmd BufUnload * nested call s:BufUnload()
+	au!
+	autocmd FileChangedRO * nested call s:FileChangedRO()
+	autocmd BufUnload * nested call s:BufUnload()
 augroup END
 
 " Commands: {{{1
-command!          RCSdiff call s:RCS_Diff(expand("%:p"))
-command!          RCSlog  call s:RCS_ViewLog(expand("%:p"))
-command! -nargs=1 RCSco   call s:RCS_CheckOut(expand("%:p"), <f-args>)
-command! -nargs=? RCSci   call s:RCS_CheckIn(expand("%:p"))
+command!          RCSdiff call s:Diff(expand("%:p"))
+command!          RCSlog  call s:ViewLog(expand("%:p"))
+command! -nargs=1 RCSco   call s:CheckOut(expand("%:p"), <f-args>)
+command! -nargs=? RCSci   call s:CheckIn(expand("%:p"))
+
+command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
+			\ s:self,
+			\ (<q-args> != '' ? fnamemodify(<q-args> . '/' . fnamemodify(s:self, ':p:t:r') . '.txt', '') : s:selfdoc)
+		\)
 
 " Functions: {{{1
 
 function! s:FileChangedRO()  " {{{2
 	if filereadable(expand('<afile>:p:h') . '/RCS/' . expand("<afile>:t") . ',v')
 				\ && (confirm("This is a read-only RCS controlled file, check out?", "&Yes\n&No", 1, "Q") == 1)
-		call s:RCS_CheckOut(expand('<afile>:p'), 1)
+		call s:CheckOut(expand('<afile>:p'), 1)
 		silent! foldopen!
 	endif
 endfunction
@@ -226,11 +314,11 @@ function! s:BufUnload()  " {{{2
 	if getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') != ''
 				\ && (getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') == expand('<afile>:p'))
 				\ && (confirm(expand('<afile>:t') . " is an RCS controlled file checked out by Vim.\nCheck back in?", "&Yes\n&No", 1, "Q") == 1)
-		call s:RCS_CheckIn(expand('<afile>:p'), 0)
+		call s:CheckIn(expand('<afile>:p'), 0)
 	endif
 endfunction
 
-function! s:RCS_Diff(file)  " {{{2
+function! s:Diff(file)  " {{{2
 	let rcs_diff_name = "[Previous version of " . fnamemodify(a:file, ':t') . "]"
 
 	if bufnr('^\V' . rcs_diff_name) != -1
@@ -253,72 +341,25 @@ function! s:RCS_Diff(file)  " {{{2
 	exe 'silent vertical rightbelow diffsplit ' . rcs_diff_file
 	exe 'silent file ' . rcs_diff_name
 	exe 'silent bwipe! ' . rcs_diff_file
-	exe 'silent call delete("' . rcs_diff_file . '")'
+	call delete(rcs_diff_file)
 	exe 'setlocal filetype=' . filetype . ' syntax=' . syntax
 	setlocal buftype=nofile noswapfile foldmethod=diff readonly nomodifiable
+	setlocal bufhidden=wipe
 
-	if v:version > 601 || v:version == 601 && has('patch287')
-		setlocal bufhidden=wipe
-	else
-		setlocal bufhidden=delete
-	endif
-
-	exe 'autocmd! BufDelete ' . escape(rcs_diff_name, '[]') . ' ' .
+	exe 'autocmd! BufDelete <buffer> ' .
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&diff", "0") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&wrap", "' . wrap . '") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&scrollbind", "0") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&foldcolumn", "' . foldcolumn . '") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&foldmethod", "' . foldmethod . '") | '
-		\ 'redraw! | '
-		\ 'autocmd! BufDelete ' . escape(rcs_diff_name, '[]')
+		\ 'redraw!'
 
 	normal zX
 	wincmd p
 	normal zX
 endfunction
 
-function! s:RCS_ViewLog(file)  " {{{2
-	let file_escaped=escape(a:file, ' \')
-
-	exe 'silent new [RCS\ Log:\ ' . file_escaped . ']'
-	setlocal noreadonly
-	exe 'silent 0r !rlog ' . a:file
-	call append(0, '+++ Press space to page down, "b" to page up, "q" to quit. +++')
-
-	syntax case match
-	syntax match rcslogKeys   '^\%1l+++ .\+ +++$'
-	syntax match rcslogDelim  '^-\{4,}$'
-	syntax match rcslogDelim  '^=\{4,}+$'
-	syntax match rcslogValues '^revision [0-9.]\+$' contains=rcslogNumber
-	syntax match rcslogFile   '^\(RCS file\|Working file\): .\+' contains=rcslogString
-	syntax match rcslogValues '^\(head\|branch\|locks\|access list\|symbolic names\|keyword substitution\|total revisions\|description\|locked by\|date\):\( [^;]\+\)\=' contains=rcslogString
-	syntax match rcslogValues '\(author\|state\): [^;]\+;'me=e-1 contains=rcslogString
-	syntax match rcslogValues '\(lines\|selected revisions\): [ 0-9+-]\+$' contains=rcslogNumber
-	syntax match rcslogString ': [^;]\+'ms=s+2 contained contains=rcslogNumber
-	syntax match rcslogNumber '[+-]\=[0-9.]\+' contained
-	highlight default link rcslogKeys    Todo
-	highlight default link rcslogDelim   PreProc
-	highlight default link rcslogValues  Identifier
-	highlight default link rcslogFile    Type
-	highlight default link rcslogString  String
-	highlight default link rcslogNumber  Number
-
-	if v:version > 601 || v:version == 601 && has('patch287')
-		setlocal bufhidden=wipe
-	else
-		setlocal bufhidden=delete
-	endif
-
-	setlocal buftype=nofile noswapfile readonly nomodifiable
-
-	nnoremap <buffer> q <C-w>c
-	nnoremap <buffer> <space> <C-f>
-	nnoremap <buffer> b <C-b>
-
-	1 " Go to the first line in the file.
-endfunction
-
-function! s:RCS_CheckOut(file, mode)  " {{{2
+function! s:CheckOut(file, mode)  " {{{2
 	let mode = ''
 
 	if a:mode == 1 || a:mode == 'w'
@@ -363,7 +404,7 @@ function! s:RCS_CheckOut(file, mode)  " {{{2
 	let &eventignore = eventignore_save
 endfunction
 
-function! s:RCS_CheckIn(file, ...)  " {{{2
+function! s:CheckIn(file, ...)  " {{{2
 	call setbufvar(a:file, 'RCS_CheckedOut', '')
 
 	let rlog = "" | let fullrlog = ""
@@ -378,9 +419,9 @@ function! s:RCS_CheckIn(file, ...)  " {{{2
 		let rlog = input("> ")
 	endwhile
 
-	let fullrlog = substitute(fullrlog, "\\([\"$]\\)", "\\\\\\1", "g")
+	let fullrlog = escape(fullrlog, '"$')
 
-	if fullrlog =~ '^[[:return:][:space:]]\+$'
+	if fullrlog =~ '^[[:return:][:space:]]*$'
 		let fullrlog = '*** empty log message ***'
 	endif
 
@@ -412,9 +453,200 @@ function! s:RCS_CheckIn(file, ...)  " {{{2
 	call cursor(l, c)
 	let &eventignore = eventignore_save
 endfunction
+
+function! s:ViewLog(file)  " {{{2
+	let file_escaped=escape(a:file, ' \')
+
+	exe 'silent new [RCS\ Log:\ ' . file_escaped . ']'
+	let b:rcs_filename = a:file
+
+	call s:ViewLog2(a:file)
+
+	syntax case match
+	syntax match rcslogDelim  '^-\{4,}$'
+	syntax match rcslogDelim  '^=\{4,}+$'
+	syntax match rcslogValues '^revision [0-9.]\+$' contains=rcslogNumber
+	syntax match rcslogFile   '^\(RCS file\|Working file\): .\+' contains=rcslogString
+	syntax match rcslogValues '^\(head\|branch\|locks\|access list\|symbolic names\|keyword substitution\|total revisions\|description\|locked by\|date\):\( [^;]\+\)\=' contains=rcslogString
+	syntax match rcslogValues '\(author\|state\): [^;]\+;'me=e-1 contains=rcslogString
+	syntax match rcslogValues '\(lines\|selected revisions\): [ 0-9+-]\+$' contains=rcslogNumber
+	syntax match rcslogString ': [^;]\+'ms=s+2 contained contains=rcslogNumber
+	syntax match rcslogNumber '[+-]\=[0-9.]\+' contained
+	highlight default link rcslogKeys    Comment
+	highlight default link rcslogDelim   PreProc
+	highlight default link rcslogValues  Identifier
+	highlight default link rcslogFile    Type
+	highlight default link rcslogString  String
+	highlight default link rcslogNumber  Number
+	highlight default link rcslogCurrent NonText
+
+	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
+
+	nnoremap <buffer> q <C-w>c
+	nnoremap <buffer> <space> <C-f>
+	nnoremap <buffer> b <C-b>
+	nnoremap <silent> <buffer> J :if search('^-\+\nrevision \d\+\.\d\+', 'W')<bar>exe 'normal j'<bar>endif<CR>
+	nnoremap <silent> <buffer> K :call search('^revision \d\+\.\d\+', 'Wb')<CR>
+				\:call search('^-\+\nrevision \d\+\.\d\+', 'Wb')<CR>j
+	nnoremap <silent> <buffer> <cr> :call <SID>EditLogItem()<CR>
+	nnoremap <silent> <buffer> <c-l> <c-l>:call <SID>ViewLog2(b:rcs_filename)<CR>
+
+	autocmd CursorMoved <buffer> call s:LogHighlight()
+endfunction
+
+function! s:ViewLog2(file)  " {{{2
+	setlocal noreadonly modifiable
+	let where = s:ByteOffset()
+	silent! 1,$delete
+	exe 'silent 0r !rlog ' . a:file
+	let keys = [
+			\ '+++ Keys:                                                 +++',
+			\ '+++  <space>     -  Page down                             +++',
+			\ '+++  b           -  Page up                               +++',
+			\ '+++  <control-l> -  Refresh the screen and reload the log +++',
+			\ '+++  J           -  Jump to next log section              +++',
+			\ '+++  K           -  Jump to previous log section          +++',
+			\ "+++  <enter>     -  Edit the current log entry's message  +++",
+			\ '+++  q           -  Close this log view                   +++'
+		\ ]
+	call append(0, keys)
+	setlocal readonly nomodifiable
+	1 " Go to the first line in the file.
+	silent! execute 'goto ' . where
+
+	exe 'syntax match rcslogKeys   =^\%<' . (len(keys) + 1) . 'l+++ .\+ +++$='
+endfunction
+
+function! s:LogHighlight()  " {{{2
+	let curline = line('.')
+	let back    = search('^-\+\nrevision \d\+\.\d\+', 'bWn')
+	let forward = search('^-\+$', 'Wn')
+
+	if back > 0 && curline >= back && curline <= forward && getline('.') !~ '^-\+$'
+		execute '2match rcslogCurrent /^\%' . back . 'l\_.\+\%' . forward . 'l-\+/'
+	else
+		2match
+	endif
+
+	" A faster/easier way?:
+	"  /^-\+\(\n\(-\+\)\@!.\+\)*\%#.*\(\n\(-\+\)\@!.\+\)*
+endfunction
+
+function! s:EditLogItem()  " {{{2
+	if ! exists('b:rcs_filename')
+		echohl ErrorMsg
+		echomsg "Can't determine the filename associated with the current log"
+		echohl None
+		return 0
+	endif
+
+	let rcs_filename = b:rcs_filename
+	let curline = line('.')
+	let back    = search('^-\+\nrevision \d\+\.\d\+', 'bWn')
+	let forward = search('^-\+$', 'Wn')
+
+	if back > 0 && curline >= back && curline <= forward && getline('.') !~ '^-\+$'
+		let line = getline(back + 1)
+		let id   = substitute(line, 'revision \(\d\+\.\d\+\).*', '\1', '')
+
+		let fname =  '[Log entry for ' . fnamemodify(rcs_filename, ':p:t') . ' revision ' . id . ']'
+
+		if bufloaded(fname)
+			echohl ErrorMsg
+			echo "A buffer for that log message already exists"
+			echohl None
+			return 0
+		endif
+
+		execute 'new ' . escape(fname, ' \')
+		setlocal buftype=acwrite
+		let b:rcs_id       = id
+		let b:rcs_filename = rcs_filename
+		silent! execute 'read !rlog -r' . id . ' ' . escape(rcs_filename, ' \')
+		silent! 1,/^revision .\+\ndate: \d\{4\}\/\d\d\/\d\d \d\d:\d\d:\d\d.*/+1 delete
+		silent! $delete
+		call append(0, ["+++ Change the log message below this line and write+quit +++", ''])
+		setlocal nomodified
+
+		syntax match rcslogKeys =^\%<2l+++ .\+ +++$=
+		highlight default link rcslogKeys Todo
+
+		autocmd BufWriteCmd <buffer> call s:SaveLogItem()
+	else
+		echohl ErrorMsg
+		echom "The cursor isn't within a log section"
+		echohl None
+		return 0
+	endif
+endfunction
+
+function! s:SaveLogItem()  " {{{2
+	if ! exists('b:rcs_id') || ! exists('b:rcs_filename')
+		return 0
+	endif
+
+	let lnum     = 1
+	while match(getline(lnum), '^+++ .\+ +++$') >= 0
+		let lnum = lnum + 1
+	endwhile
+
+	if match(getline(lnum), '^$') >= 0
+		let lnum = lnum + 1
+	endif
+
+	let fullrlog = join(getline(lnum, '$'), "\n")
+	let fullrlog = escape(fullrlog, '"$')
+
+	if fullrlog =~ '^[[:return:][:space:]]*$'
+		let fullrlog = '*** empty log message ***'
+	endif
+
+	let RCS_Out = system("rcs -m" . b:rcs_id  . ":\"" . fullrlog . "\" " . b:rcs_filename)
+	if v:shell_error
+		echoerr "Nonzero exit status from 'ci -m ...':"
+		echohl ErrorMsg | :echo RCS_Out | :echohl None
+		let v:errmsg = RCS_Out
+	endif
+
+	setlocal nomodified
+endfunction
+
+function! s:ByteOffset()  " {{{2
+        return line2byte(line(".")) + col(".") - 1
+endfunction
+
+function! s:UpdateHelp(self, doc)  " {{{2
+	let docdir = fnamemodify(a:doc, ':p:h')
+	if filewritable(docdir) != 2
+		echohl ErrorMsg
+		echomsg "Can't write to directory \"" . docdir . "\"." . 
+					\"  Please make sure it exists and is writable."
+		echohl None
+		return 0
+	endif
+
+	echomsg "Updating help file for " . fnamemodify(a:self, ':p:t')
+
+	let temp = tempname()
+	silent execute 'split ' . temp
+	silent execute 'read ' . a:self
+	silent /^" Last Change:
+	let foo = getline('.')
+	silent 1,/" Help File: -\+ {{{\d$/ delete
+	silent /" -\+ }}}\d$/,$ delete
+	silent call append(1, substitute(foo, '" ', '"\t\t', ''))
+	silent %s/^" \=//
+	silent execute 'w! ' . a:doc
+	silent bwipe!
+	call delete(temp)
+	silent execute 'helptags ' . docdir
+	nohlsearch
+
+	return 1
+endfunction
 " }}}1
 
 let &cpoptions = s:savecpo
 unlet s:savecpo
 
-" vim600:fdm=marker:fdc=3:cms=\ "\ %s:
+" vim600:fdm=marker:fdc=3:cms=\ "\ %s:fml=2:
