@@ -2,10 +2,10 @@
 "
 " Author:      Christian J. Robinson <infynity@onewest.net>
 " URL:         http://www.infynity.spodzone.com/vim
-" Last Change: April 29, 2008
-" Version:     0.10
+" Last Change: June 01, 2008
+" Version:     0.11.1
 "
-" Copyright (C) 2002-2008  Christian J. Robinson <infynity@onewest.net>
+" Copyright (C) 2002-2008 Christian J. Robinson <infynity@onewest.net>
 " Distributed under the terms of the Vim license.  See ":help license".
 "
 " Install Details: -----------------------------------------------------------
@@ -56,7 +56,8 @@
 "							*:RCSlog*
 " :RCSlog
 "	Show the entire log file--syntax highlighted--in a split window.
-"	Individual log entries can be edited from this display.
+"	Individual log entries can be edited from this display.  And you can
+"	show the differences between two consecutive versions.
 "
 "							*:RCSco*
 " :RCSco ro
@@ -75,9 +76,10 @@
 "
 "							*:RCSUpdateHelp*
 " :RCSUpdateHelp [directory]
-"	Update the help file for this script.  If you specify a directory the help
-"	file will be written there rather than the doc directory relative to where
-"	this script is installed--useful if that directory is the wrong one.
+"	Update the help file for this script.  If you specify a directory the
+"	help file will be written there rather than the doc directory relative
+"	to where this script is installed--useful if that directory is the
+"	wrong one.
 "
 "
 " ==============================================================================
@@ -100,11 +102,38 @@
 " <
 " ----------------------------------------------------------------------- }}}1
 "
-" $Id: rcs.vim,v 1.30 2008/04/29 20:36:49 infynity Exp $
+" TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
+"        and from the log display.
+"
+" $Id: rcs.vim,v 1.37 2008/06/02 07:11:09 infynity Exp $
 "
 " ChangeLog: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.37  2008/06/02 07:11:09  infynity
+" *** empty log message ***
+"
+" Revision 1.36  2008/06/01 08:33:45  infynity
+" Check all windows in all tabs for the 'diff' option
+"
+" Revision 1.35  2008/06/01 03:30:08  infynity
+" Wasn't checking for the 'diff' option properly.
+"
+" Revision 1.34  2008/05/31 02:49:48  infynity
+" - Allow diffing of two consecutive revisions from the log view
+" - Allow folding of the log view
+" - Tweaks
+"
+" Revision 1.33  2008/05/28 20:36:14  infynity
+" *** empty log message ***
+"
+" Revision 1.32  2008/05/27 13:03:33  infynity
+" Make entering the log message a little easier
+"
+" Revision 1.31  2008/05/04 11:10:09  infynity
+" Use matchadd() instead of :2match -- less likelyhood of a "collision" with
+"   another plugin
+"
 " Revision 1.30  2008/04/29 20:36:49  infynity
 " :RCSUpdateHelp {arg} wasn't working
 "
@@ -319,6 +348,13 @@ function! s:BufUnload()  " {{{2
 endfunction
 
 function! s:Diff(file)  " {{{2
+	if len(s:WinLocalVars('&diff')) > 0
+		echohl ErrorMsg
+		echomsg "It appears Vim is already running a diff, close those buffers first."
+		echohl None
+		return 0
+	endif
+
 	let rcs_diff_name = "[Previous version of " . fnamemodify(a:file, ':t') . "]"
 
 	if bufnr('^\V' . rcs_diff_name) != -1
@@ -336,6 +372,8 @@ function! s:Diff(file)  " {{{2
 	let wrap          = getbufvar(a:file, '&wrap')
 	let foldcolumn    = getbufvar(a:file, '&foldcolumn')
 	let foldmethod    = getbufvar(a:file, '&foldmethod')
+	let scrollopt     = getbufvar(a:file, '&scrollopt')
+	let scrollbind    = getbufvar(a:file, '&scrollbind')
 
 	silent call system('co -p ' . a:file . ' > ' . rcs_diff_file . ' 2> /dev/null')
 	exe 'silent vertical rightbelow diffsplit ' . rcs_diff_file
@@ -349,7 +387,8 @@ function! s:Diff(file)  " {{{2
 	exe 'autocmd! BufDelete <buffer> ' .
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&diff", "0") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&wrap", "' . wrap . '") | '
-		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&scrollbind", "0") | '
+		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&scrollbind", "' . scrollbind . '") | '
+		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&scrollopt", "' . scrollopt . '") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&foldcolumn", "' . foldcolumn . '") | '
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&foldmethod", "' . foldmethod . '") | '
 		\ 'redraw!'
@@ -407,16 +446,22 @@ endfunction
 function! s:CheckIn(file, ...)  " {{{2
 	call setbufvar(a:file, 'RCS_CheckedOut', '')
 
-	let rlog = "" | let fullrlog = ""
-	if &columns >= 82
-		echo "  Enter log message (. to end):                                         <-70 80->|\n"
-	else
-		echo "  Enter log message (. to end):                                         <-70\n"
+	let message=printf('%-70s', 'Enter log message for "' . fnamemodify(a:file, ':t') . '" (. to end):')
+
+	if strlen(message) <= 70
+		if &columns >= 80
+			echo message . "<-70 80->|\n"
+		else
+			echo message . "<-70\n"
+		endif
 	endif
+
+	let rlog = "" | let fullrlog = ""
 
 	while rlog != "."
 		let fullrlog = fullrlog . "\n" . rlog
 		let rlog = input("> ")
+		echo "  " . rlog . "\n"
 	endwhile
 
 	let fullrlog = escape(fullrlog, '"$')
@@ -455,9 +500,9 @@ function! s:CheckIn(file, ...)  " {{{2
 endfunction
 
 function! s:ViewLog(file)  " {{{2
-	let file_escaped=escape(a:file, ' \')
+	let file_escaped=escape(fnamemodify(a:file, ':t'), ' \')
 
-	exe 'silent new [RCS\ Log:\ ' . file_escaped . ']'
+	exe 'silent topleft new [RCS\ log\ for\ ' . file_escaped . ']'
 	let b:rcs_filename = a:file
 
 	call s:ViewLog2(a:file)
@@ -481,6 +526,9 @@ function! s:ViewLog(file)  " {{{2
 	highlight default link rcslogCurrent NonText
 
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
+	setlocal foldexpr=RCSFoldLog() foldmethod=expr
+
+	normal zR
 
 	nnoremap <buffer> q <C-w>c
 	nnoremap <buffer> <space> <C-f>
@@ -489,6 +537,7 @@ function! s:ViewLog(file)  " {{{2
 	nnoremap <silent> <buffer> K :call search('^revision \d\+\.\d\+', 'Wb')<CR>
 				\:call search('^-\+\nrevision \d\+\.\d\+', 'Wb')<CR>j
 	nnoremap <silent> <buffer> <cr> :call <SID>EditLogItem()<CR>
+	nnoremap <silent> <buffer> d :call <SID>LogDiff()<CR>
 	nnoremap <silent> <buffer> <c-l> <c-l>:call <SID>ViewLog2(b:rcs_filename)<CR>
 
 	autocmd CursorMoved <buffer> call s:LogHighlight()
@@ -500,14 +549,15 @@ function! s:ViewLog2(file)  " {{{2
 	silent! 1,$delete
 	exe 'silent 0r !rlog ' . a:file
 	let keys = [
-			\ '+++ Keys:                                                 +++',
-			\ '+++  <space>     -  Page down                             +++',
-			\ '+++  b           -  Page up                               +++',
-			\ '+++  <control-l> -  Refresh the screen and reload the log +++',
-			\ '+++  J           -  Jump to next log section              +++',
-			\ '+++  K           -  Jump to previous log section          +++',
-			\ "+++  <enter>     -  Edit the current log entry's message  +++",
-			\ '+++  q           -  Close this log view                   +++'
+			\ '+++ Keys:                                                            +++',
+			\ '+++  <space>     -  Page down                                        +++',
+			\ '+++  b           -  Page up                                          +++',
+			\ '+++  <control-l> -  Refresh the screen and reload the log            +++',
+			\ '+++  J           -  Jump to next log section                         +++',
+			\ '+++  K           -  Jump to previous log section                     +++',
+			\ "+++  <enter>     -  Edit the current revision entry's message        +++",
+			\ "+++  d           -  Diff the current revision with the previous one  +++",
+			\ '+++  q           -  Close this log view                              +++',
 		\ ]
 	call append(0, keys)
 	setlocal readonly nomodifiable
@@ -517,19 +567,104 @@ function! s:ViewLog2(file)  " {{{2
 	exe 'syntax match rcslogKeys   =^\%<' . (len(keys) + 1) . 'l+++ .\+ +++$='
 endfunction
 
+function! RCSFoldLog()  " {{{2
+	if getline(v:lnum) =~ '^+++ .\+ +++$'
+		return 1
+	endif
+	if getline(v:lnum) == '' && getline(v:lnum - 1) =~ '^+++ .\+ +++$'
+		return 0
+	endif
+	if getline(v:lnum) =~ '^-\+$'
+		return '>1'
+	endif
+
+	return '='
+endfunction
+
 function! s:LogHighlight()  " {{{2
 	let curline = line('.')
-	let back    = search('^-\+\nrevision \d\+\.\d\+', 'bWn')
-	let forward = search('^-\+$', 'Wn')
+	let idarr = s:GetLogId(curline)
 
-	if back > 0 && curline >= back && curline <= forward && getline('.') !~ '^-\+$'
-		execute '2match rcslogCurrent /^\%' . back . 'l\_.\+\%' . forward . 'l-\+/'
+	if idarr[0] != -1
+		if exists('b:rcsmatchid')
+			silent! call matchdelete(b:rcsmatchid)
+			call matchadd('rcslogCurrent', '^\%' . idarr[1] . 'l\_.\+\%' . idarr[2] . 'l-\+', 20, b:rcsmatchid)
+		else
+			let b:rcsmatchid = matchadd('rcslogCurrent', '^\%' . idarr[1] . 'l\_.\+\%' . idarr[2] . 'l-\+', 20)
+		endif
 	else
-		2match
+		silent! call matchdelete(b:rcsmatchid)
 	endif
 
 	" A faster/easier way?:
 	"  /^-\+\(\n\(-\+\)\@!.\+\)*\%#.*\(\n\(-\+\)\@!.\+\)*
+endfunction
+
+function! s:GetLogId(line)  " {{{2
+	let offset = s:ByteOffset()
+	call cursor(a:line, 0)
+
+	let back    = search('^-\+\nrevision \d\+\.\d\+', 'bWn')
+	let forward = search('^-\+$', 'Wn')
+
+	exe 'go ' . offset
+
+	if back > 0 && a:line >= back && a:line <= forward && getline('.') !~ '^-\+$'
+		let line = getline(back + 1)
+		let id   = substitute(line, 'revision \(\d\+\.\d\+\).*', '\1', '')
+
+		return [id, back, forward]
+	else
+		return [-1, -1, -1]
+	endif
+endfunction
+
+function! s:LogDiff()  " {{{2
+	if ! exists('b:rcs_filename')
+		echohl ErrorMsg
+		echomsg "Can't determine the filename associated with the current log"
+		echohl None
+		return 0
+	endif
+
+	if len(s:WinLocalVars('&diff')) > 0
+		echohl ErrorMsg
+		echomsg "It appears Vim is already running a diff, close those buffers first."
+		echohl None
+		return 0
+	endif
+
+	let rcs_filename = b:rcs_filename
+
+	let curline = line('.')
+	let idarr1 = s:GetLogId(curline)
+
+	if idarr1[0] != -1
+		let idarr2 = s:GetLogId(idarr1[2] + 1)
+	endif
+
+	if idarr1[0] == -1 || idarr2[0] == -1
+		echohl ErrorMsg
+		echomsg "Can't determine the revision IDs to diff"
+		echohl None
+		return 0
+	endif
+
+	let file_escaped=escape(fnamemodify(rcs_filename, ':t'), ' \')
+
+	exe 'silent topleft new [' . file_escaped . ', revision ' . idarr2[0] . ']'
+	silent exe 'read !co -p -r' . idarr2[0] . ' ' . escape(rcs_filename, ' \') . ' 2>/dev/null'
+	diffthis
+	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
+
+	exe 'silent vertical rightbelow new [' . file_escaped . ', revision ' . idarr1[0] . ']'
+	silent exe 'read !co -p -r' . idarr1[0] . ' ' . escape(rcs_filename, ' \') . ' 2>/dev/null'
+	diffthis
+	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
+
+	wincmd p
+	wincmd _
+	1
 endfunction
 
 function! s:EditLogItem()  " {{{2
@@ -541,15 +676,12 @@ function! s:EditLogItem()  " {{{2
 	endif
 
 	let rcs_filename = b:rcs_filename
+
 	let curline = line('.')
-	let back    = search('^-\+\nrevision \d\+\.\d\+', 'bWn')
-	let forward = search('^-\+$', 'Wn')
+	let idarr = s:GetLogId(curline)
 
-	if back > 0 && curline >= back && curline <= forward && getline('.') !~ '^-\+$'
-		let line = getline(back + 1)
-		let id   = substitute(line, 'revision \(\d\+\.\d\+\).*', '\1', '')
-
-		let fname =  '[Log entry for ' . fnamemodify(rcs_filename, ':p:t') . ' revision ' . id . ']'
+	if idarr[0] != -1
+		let fname =  '[Log entry for ' . fnamemodify(rcs_filename, ':p:t') . ' revision ' . idarr[0] . ']'
 
 		if bufloaded(fname)
 			echohl ErrorMsg
@@ -559,10 +691,10 @@ function! s:EditLogItem()  " {{{2
 		endif
 
 		execute 'new ' . escape(fname, ' \')
-		setlocal buftype=acwrite
-		let b:rcs_id       = id
+		setlocal buftype=acwrite bufhidden=wipe
+		let b:rcs_id       = idarr[0]
 		let b:rcs_filename = rcs_filename
-		silent! execute 'read !rlog -r' . id . ' ' . escape(rcs_filename, ' \')
+		silent! execute 'read !rlog -r' . idarr[0] . ' ' . escape(rcs_filename, ' \')
 		silent! 1,/^revision .\+\ndate: \d\{4\}\/\d\d\/\d\d \d\d:\d\d:\d\d.*/+1 delete
 		silent! $delete
 		call append(0, ["+++ Change the log message below this line and write+quit +++", ''])
@@ -612,7 +744,21 @@ function! s:SaveLogItem()  " {{{2
 endfunction
 
 function! s:ByteOffset()  " {{{2
-        return line2byte(line(".")) + col(".") - 1
+	let offset = line2byte(line(".")) + col(".") - 1
+	return (offset < 1 ? 1 : offset)
+endfunction
+
+function! s:WinLocalVars(var)  " {{{2
+	let vals = []
+	for i in range(1, tabpagenr('$'))
+		for j in range(1, tabpagewinnr(i, '$'))
+			let tmp = gettabwinvar(i, j, a:var)
+			if tmp != 0 && tmp != ''
+				call add(vals, [i, j, tmp])
+			endif
+		endfor
+	endfor
+	return vals
 endfunction
 
 function! s:UpdateHelp(self, doc)  " {{{2
@@ -649,4 +795,4 @@ endfunction
 let &cpoptions = s:savecpo
 unlet s:savecpo
 
-" vim600:fdm=marker:fdc=3:cms=\ "\ %s:fml=2:
+" vim600:fdm=marker:fdc=3:cms=\ "\ %s:fml=2:tw=76:
