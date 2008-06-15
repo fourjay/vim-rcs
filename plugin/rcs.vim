@@ -2,8 +2,8 @@
 "
 " Author:      Christian J. Robinson <infynity@onewest.net>
 " URL:         http://www.infynity.spodzone.com/vim
-" Last Change: June 01, 2008
-" Version:     0.11.1
+" Last Change: June 14, 2008
+" Version:     0.12
 "
 " Copyright (C) 2002-2008 Christian J. Robinson <infynity@onewest.net>
 " Distributed under the terms of the Vim license.  See ":help license".
@@ -105,11 +105,14 @@
 " TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
 "        and from the log display.
 "
-" $Id: rcs.vim,v 1.37 2008/06/02 07:11:09 infynity Exp $
+" $Id: rcs.vim,v 1.38 2008/06/15 05:46:46 infynity Exp $
 "
 " ChangeLog: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.38  2008/06/15 05:46:46  infynity
+" Try to safely escape shell commadns
+"
 " Revision 1.37  2008/06/02 07:11:09  infynity
 " *** empty log message ***
 "
@@ -375,7 +378,7 @@ function! s:Diff(file)  " {{{2
 	let scrollopt     = getbufvar(a:file, '&scrollopt')
 	let scrollbind    = getbufvar(a:file, '&scrollbind')
 
-	silent call system('co -p ' . a:file . ' > ' . rcs_diff_file . ' 2> /dev/null')
+	silent call system('co -p ' . s:ShellEscape(a:file) . ' > ' . s:ShellEscape(rcs_diff_file) . ' 2> /dev/null')
 	exe 'silent vertical rightbelow diffsplit ' . rcs_diff_file
 	exe 'silent file ' . rcs_diff_name
 	exe 'silent bwipe! ' . rcs_diff_file
@@ -408,7 +411,7 @@ function! s:CheckOut(file, mode)  " {{{2
 	if filewritable(a:file)
 		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'Q') == 1
 			let mode = '-f ' . mode
-			let RCS_Out = system('co ' . mode . a:file)
+			let RCS_Out = system('co ' . mode . s:ShellEscape(a:file))
 		elseif a:mode == 1 || a:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
 			let b:RCS_CheckedOut = a:file
 			return
@@ -416,7 +419,7 @@ function! s:CheckOut(file, mode)  " {{{2
 			return
 		endif
 	else
-		let RCS_Out = system('co ' . mode . a:file)
+		let RCS_Out = system('co ' . mode . s:ShellEscape(a:file))
 	endif
 
 	if v:shell_error
@@ -464,13 +467,14 @@ function! s:CheckIn(file, ...)  " {{{2
 		echo "  " . rlog . "\n"
 	endwhile
 
-	let fullrlog = escape(fullrlog, '"$')
+	"let fullrlog = escape(fullrlog, '"$')
 
 	if fullrlog =~ '^[[:return:][:space:]]*$'
 		let fullrlog = '*** empty log message ***'
 	endif
 
-	let RCS_Out = system("ci -m\"" . fullrlog . "\" " . a:file)
+	echomsg "ci -m" . s:ShellEscape(fullrlog) . " " . s:ShellEscape(a:file)
+	let RCS_Out = system("ci -m" . s:ShellEscape(fullrlog) . " " . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'ci -m ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
@@ -478,7 +482,7 @@ function! s:CheckIn(file, ...)  " {{{2
 		"echoerr RCS_Out
 	endif
 
-	let RCS_Out = system('co ' . a:file)
+	let RCS_Out = system('co ' . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'co ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
@@ -547,7 +551,7 @@ function! s:ViewLog2(file)  " {{{2
 	setlocal noreadonly modifiable
 	let where = s:ByteOffset()
 	silent! 1,$delete
-	exe 'silent 0r !rlog ' . a:file
+	exe 'silent 0r !rlog ' . s:ShellEscape(a:file)
 	let keys = [
 			\ '+++ Keys:                                                            +++',
 			\ '+++  <space>     -  Page down                                        +++',
@@ -653,12 +657,12 @@ function! s:LogDiff()  " {{{2
 	let file_escaped=escape(fnamemodify(rcs_filename, ':t'), ' \')
 
 	exe 'silent topleft new [' . file_escaped . ', revision ' . idarr2[0] . ']'
-	silent exe 'read !co -p -r' . idarr2[0] . ' ' . escape(rcs_filename, ' \') . ' 2>/dev/null'
+	silent exe 'read !co -p -r' . idarr2[0] . ' ' . s:ShellEscape(rcs_filename) . ' 2>/dev/null'
 	diffthis
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
 
 	exe 'silent vertical rightbelow new [' . file_escaped . ', revision ' . idarr1[0] . ']'
-	silent exe 'read !co -p -r' . idarr1[0] . ' ' . escape(rcs_filename, ' \') . ' 2>/dev/null'
+	silent exe 'read !co -p -r' . idarr1[0] . ' ' . s:ShellEscape(rcs_filename) . ' 2>/dev/null'
 	diffthis
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
 
@@ -694,7 +698,7 @@ function! s:EditLogItem()  " {{{2
 		setlocal buftype=acwrite bufhidden=wipe
 		let b:rcs_id       = idarr[0]
 		let b:rcs_filename = rcs_filename
-		silent! execute 'read !rlog -r' . idarr[0] . ' ' . escape(rcs_filename, ' \')
+		silent! execute 'read !rlog -r' . idarr[0] . ' ' . s:ShellEscape(rcs_filename)
 		silent! 1,/^revision .\+\ndate: \d\{4\}\/\d\d\/\d\d \d\d:\d\d:\d\d.*/+1 delete
 		silent! $delete
 		call append(0, ["+++ Change the log message below this line and write+quit +++", ''])
@@ -727,13 +731,13 @@ function! s:SaveLogItem()  " {{{2
 	endif
 
 	let fullrlog = join(getline(lnum, '$'), "\n")
-	let fullrlog = escape(fullrlog, '"$')
+	"let fullrlog = escape(fullrlog, '"$')
 
 	if fullrlog =~ '^[[:return:][:space:]]*$'
 		let fullrlog = '*** empty log message ***'
 	endif
 
-	let RCS_Out = system("rcs -m" . b:rcs_id  . ":\"" . fullrlog . "\" " . b:rcs_filename)
+	let RCS_Out = system("rcs -m" . b:rcs_id  . ":" . s:ShellEscape(fullrlog) . " " . s:ShellEscape(b:rcs_filename))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'ci -m ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
@@ -789,6 +793,19 @@ function! s:UpdateHelp(self, doc)  " {{{2
 	nohlsearch
 
 	return 1
+endfunction
+
+function! s:ShellEscape(str) " {{{2
+	if exists('*shellescape')
+		return shellescape(a:str)
+	else
+    if has('unix')
+      return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
+    else
+      " Don't know how to properly escape for 'doze, so don't bother:
+      return a:str
+    endif
+	endif
 endfunction
 " }}}1
 
