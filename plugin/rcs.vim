@@ -3,12 +3,12 @@
 " ----------------------------------------------------------------------------
 " rcs.vim -- Automatically handle RCS controlled files.
 "
-" Author:      Christian J. Robinson <infynity@onewest.net>
+" Author:      Christian J. Robinson <heptite@gmail.com>
 " URL:         http://www.infynity.spodzone.com/vim
-" Last Change: August 9, 2008
-" Version:     0.13.1
+" Last Change: April 24, 2010
+" Version:     0.14
 "
-" Copyright (C) 2002-2008 Christian J. Robinson <infynity@onewest.net>
+" Copyright (C) 2002-2008 Christian J. Robinson <heptite@gmail.com>
 " Distributed under the terms of the Vim license.  See ":help license".
 "
 " Install Details: -----------------------------------------------------------
@@ -27,11 +27,20 @@
 " TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
 "        and from the log display.
 "
-" $Id: rcs.vim,v 1.42 2008/08/09 23:44:23 infynity Exp $
+" $Id: rcs.vim,v 1.45 2010/04/24 20:17:25 infynity Exp $
 "
 " ChangeLog: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.45  2010/04/24 20:17:25  infynity
+" Update version and date
+"
+" Revision 1.44  2010/04/24 20:14:21  infynity
+" Detect RCS's ,v files in the file's cwd as well (Jon Peatfield)
+"
+" Revision 1.43  2009/06/23 14:05:51  infynity
+" Update email address
+"
 " Revision 1.42  2008/08/09 23:44:23  infynity
 " *** empty log message ***
 "
@@ -271,7 +280,8 @@ command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
 " Functions: {{{1
 
 function! s:FileChangedRO()  " {{{2
-	if filereadable(expand('<afile>:p:h') . '/RCS/' . expand("<afile>:t") . ',v')
+	if (filereadable(expand('<afile>:p:h') . '/RCS/' . expand("<afile>:t") . ',v')
+				\ || filereadable(expand('<afile>') . ',v'))
 				\ && (confirm("This is a read-only RCS controlled file, check out?", "&Yes\n&No", 1, "Q") == 1)
 		call s:CheckOut(expand('<afile>:p'), 1)
 		silent! foldopen!
