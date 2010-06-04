@@ -4,17 +4,17 @@
 " rcs.vim -- Automatically handle RCS controlled files.
 "
 " Author:      Christian J. Robinson <heptite@gmail.com>
-" URL:         http://www.infynity.spodzone.com/vim
-" Last Change: April 24, 2010
-" Version:     0.14
+" URL:         http://christianrobinson.name/vim/
+" Last Change: April 27, 2010
+" Version:     0.15.2
 "
-" Copyright (C) 2002-2008 Christian J. Robinson <heptite@gmail.com>
+" Copyright (C) 2002-2010 Christian J. Robinson <heptite@gmail.com>
 " Distributed under the terms of the Vim license.  See ":help license".
 "
 " Install Details: -----------------------------------------------------------
 "
-" Make the following directories (replace ~/.vim with the appropriate
-" directory if you're on Windows--see ":help 'runtimepath'"):
+" Make the following directories (this script will probably not work on
+" non-Unix systems):
 "   ~/.vim/plugin
 "   ~/.vim/doc
 "
@@ -27,11 +27,30 @@
 " TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
 "        and from the log display.
 "
-" $Id: rcs.vim,v 1.45 2010/04/24 20:17:25 infynity Exp $
+" $Id: rcs.vim,v 1.50 2010/05/16 22:05:12 infynity Exp $
 "
 " ChangeLog: {{{1
 "
 " $Log: rcs.vim,v $
+" Revision 1.50  2010/05/16 22:05:12  infynity
+" Update URL
+"
+" Revision 1.49  2010/05/15 20:19:04  infynity
+" Make :RCSco check for invalid arguments
+"
+" Revision 1.48  2010/04/27 19:49:54  infynity
+" Wasn't actually running the command to force a check out in the event that
+"  the user answered "Yes" to the locked by another user prompt.
+"
+" Revision 1.47  2010/04/27 03:37:35  infynity
+" - Redirect rcsdiff output for checking for unlocked changes to /dev/null
+"   (Jon Peatfield)
+" - Add a check for a lock by another user in the s:CheckOut() routine
+"
+" Revision 1.46  2010/04/24 21:18:49  infynity
+" Prompt the user on checkout if there were "unlocked" changes, suggested
+"  by Jon Peatfield
+"
 " Revision 1.45  2010/04/24 20:17:25  infynity
 " Update version and date
 "
@@ -187,7 +206,14 @@
 
 if v:version < 700
 	echohl ErrorMsg
-	echomsg "Vim 7.0 or greater is needed to run " . expand('<sfile>:p')
+	echomsg 'Vim 7.0 or greater is needed to run ' . expand('<sfile>:p')
+	echohl None
+	finish
+endif
+
+if ! has('unix')
+	echohl ErrorMsg
+	echomsg expand('<sfile>:p') . 'will probably not work correctly on non-Unix systems'
 	echohl None
 	finish
 endif
@@ -347,15 +373,48 @@ function! s:Diff(file)  " {{{2
 	normal zX
 endfunction
 
+function! s:CheckForLock(file) " {{{2
+	let rlog_out = split(system('rlog -L -h ' . a:file), '\n')
+	if len(rlog_out) == 0
+		return ''
+	endif
+
+	let locker = ''
+	let index = 0
+	while index < len(rlog_out)
+		if rlog_out[index] =~? '\slocked by: \S\+;'
+			let locker = substitute(rlog_out[index], '.*\slocked by: \(\S\+\);.*', '\1', '')
+			break
+		endif
+		let index = index + 1
+	endwhile
+
+	return locker
+endfunction
+
 function! s:CheckOut(file, mode)  " {{{2
 	let mode = ''
 
-	if a:mode == 1 || a:mode == 'w'
+	if a:mode == 1 || a:mode ==? 'w'
 		let mode = '-l '
+	elseif a:mode != '0' && a:mode !=? 'ro' && a:mode !=? 'r'
+		echohl ErrorMsg
+		echo 'Unknown argument: ' . a:mode . '  Valid arguments are "r"/"ro" or "w".'
+		echohl None
+		return
 	endif
 
-	if filewritable(a:file)
-		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'Q') == 1
+	let locker = s:CheckForLock(a:file)
+
+	if locker != '' && locker != $LOGNAME . 'a'
+		if confirm(a:file . " appears to have been locked by username '" . locker . "'.\nForce a check out anyway (this could cause loss of data)?", "&Yes\n&No", 2, 'W') == 2
+			return
+		else
+			let mode = '-f ' . mode
+			let RCS_Out = system('co ' . mode . s:ShellEscape(a:file))
+		endif
+	elseif filewritable(a:file)
+		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'W') == 1
 			let mode = '-f ' . mode
 			let RCS_Out = system('co ' . mode . s:ShellEscape(a:file))
 		elseif a:mode == 1 || a:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
@@ -365,7 +424,13 @@ function! s:CheckOut(file, mode)  " {{{2
 			return
 		endif
 	else
-		let RCS_Out = system('co ' . mode . s:ShellEscape(a:file))
+		silent! exe '!rcsdiff ' . s:ShellEscape(a:file) . ' >/dev/null 2>&1'
+		if v:shell_error > 0 && confirm(a:file . " appears to have been modified without being checked out writable (locked) first.\nCheck out anyway (changes, if any, will be lost)?", "&Yes\n&No", 2, 'W') == 2
+			return
+
+		else
+			let RCS_Out = system('co ' . mode . s:ShellEscape(a:file))
+		endif
 	endif
 
 	if v:shell_error
@@ -435,9 +500,9 @@ function! s:CheckIn(file, ...)  " {{{2
 		"echoerr RCS_Out
 	endif
 
-	let RCS_Out = system('co ' . s:ShellEscape(a:file))
+	let RCS_Out = system('co -u ' . s:ShellEscape(a:file))
 	if v:shell_error
-		echoerr "Nonzero exit status from 'co ...':"
+		echoerr "Nonzero exit status from 'co -u ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
 		let v:errmsg = RCS_Out
 		"echoerr RCS_Out
@@ -769,12 +834,12 @@ function! s:ShellEscape(str) " {{{2
 	if exists('*shellescape')
 		return shellescape(a:str)
 	else
-    if has('unix')
-      return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
-    else
-      " Don't know how to properly escape for 'doze, so don't bother:
-      return a:str
-    endif
+		if has('unix')
+			return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
+		else
+			" Don't know how to properly escape for 'doze, so don't bother:
+		return a:str
+		endif
 	endif
 endfunction
 " }}}1
@@ -787,7 +852,7 @@ finish " -- Help file follows: {{{
 *rcs.txt*	Assist with editing RCS controlled files.
 		Author: Christian J. Robinson
 
- 					*rcs.vim* *rcs*
+					*rcs.vim* *rcs*
 
 This is a set of autocommands, commands, and a menu to help you handle RCS
 controlled files.  It requires Vim 7.0 or later to run.
@@ -830,20 +895,25 @@ self-explanatory.
 :RCSco w
 	Check out the current file writable (locked).
 	
-	The ":RCSco" command will ask if you want to discard changes if you
-	already have a locked/modifiable file.
+	With either use of the ":RCSco" command, Vim will ask if you want to
+	discard changes if you already have a locked/modifiable file, or if
+	you have an unlocked file that appears to have been modified, or if
+	it looks like a user other than you has locked the file.  In the
+	last two cases it is advised that you say no and resolve the
+	differences outside of Vim.
 
 						*:RCSci*
 :RCSci
 	Check the current (changed) file in, you will be prompted for a log
-	message, and the file will automatically be checked back out readonly.
+	message, and the file will automatically be checked back out
+	readonly.
 
 						*:RCSUpdateHelp*
 :RCSUpdateHelp [directory]
-	Update the help file for this script.  If you specify a directory the
-	help file will be written there rather than the doc directory relative
-	to where this script is installed--useful if that directory is the
-	wrong one.
+	Update the help file for this script.  If you specify a directory
+	the help file will be written there rather than the doc directory
+	relative to where this script is installed--useful if that directory
+	is the wrong one.
 
 
 ==============================================================================
