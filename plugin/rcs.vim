@@ -288,6 +288,11 @@ let g:loaded_rcs_plugin = 1
 let s:sudo = ""
 if exists("g:sudo_rcs_plugin")
     let s:sudo = "sudo "
+else
+    let owner=system( "stat -c%U " . expand("%s") )
+    if owner ==# "root"
+        let s:sudo = "sudo "
+    endif
 endif
 
 " Autocommands: {{{1
