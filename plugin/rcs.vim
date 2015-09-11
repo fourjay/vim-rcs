@@ -300,8 +300,12 @@ augroup END
 " Commands: {{{1
 command!          RCSdiff call s:Diff(expand("%:p"))
 command!          RCSlog  call s:ViewLog(expand("%:p"))
-command! -nargs=1 RCSco   call s:CheckOut(expand("%:p"), <f-args>)
+command! -complete=custom,<SID>rcscomplete -nargs=? RCSco   call s:CheckOut(expand("%:p"), <f-args>)
 command! -nargs=? RCSci   call s:CheckIn(expand("%:p"))
+function! s:rcscomplete(...)
+    return "w\nro\n"
+endfunction
+
 
 command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
 			\ s:self,
@@ -397,9 +401,12 @@ function! s:CheckForLock(file) " {{{2
 	return locker
 endfunction
 
-function! s:CheckOut(file, mode)  " {{{2
+function! s:CheckOut(file, ...)  " {{{2
 	let mode = ''
 
+        if a:0 == 0
+            let a:mode = 'w'
+        endif
 	if a:mode == 1 || a:mode ==? 'w'
 		let mode = '-l '
 	elseif a:mode != '0' && a:mode !=? 'ro' && a:mode !=? 'r'
