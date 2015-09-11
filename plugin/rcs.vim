@@ -467,6 +467,7 @@ function! s:CheckOut(file, ...)  " {{{2
 	execute "silent e!"
 	call cursor(l, c)
 	let &eventignore = eventignore_save
+        redraw!
 endfunction
 
 function! s:CheckIn(file, ...)  " {{{2
@@ -531,6 +532,7 @@ function! s:CheckIn(file, ...)  " {{{2
 	execute "silent e!"
 	call cursor(l, c)
 	let &eventignore = eventignore_save
+        redraw!
 endfunction
 
 function! s:ViewLog(file)  " {{{2
