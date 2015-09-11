@@ -285,9 +285,9 @@ if exists("g:loaded_rcs_plugin")
 endif
 let g:loaded_rcs_plugin = 1
 
-let s:sudo = ""
+let b:sudo = ""
 if exists("g:sudo_rcs_plugin")
-    let s:sudo = "sudo "
+    let b:sudo = "sudo "
 endif
 
 " Autocommands: {{{1
@@ -306,6 +306,7 @@ function! s:rcscomplete(...)
     return "w\nro\n"
 endfunction
 
+command! RCSsudo let b:sudo="sudo "
 
 command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
 			\ s:self,
@@ -359,7 +360,7 @@ function! s:Diff(file)  " {{{2
 	let scrollopt     = getbufvar(a:file, '&scrollopt')
 	let scrollbind    = getbufvar(a:file, '&scrollbind')
 
-	silent call system( s:sudo . 'co -p ' . s:ShellEscape(a:file) . ' > ' . s:ShellEscape(rcs_diff_file) . ' 2> /dev/null')
+	silent call system( b:sudo . 'co -p ' . s:ShellEscape(a:file) . ' > ' . s:ShellEscape(rcs_diff_file) . ' 2> /dev/null')
 	exe 'silent vertical rightbelow diffsplit ' . rcs_diff_file
 	exe 'silent file ' . rcs_diff_name
 	exe 'silent bwipe! ' . rcs_diff_file
@@ -423,12 +424,12 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 		else
 			let mode = '-f ' . mode
-			let RCS_Out = system(s:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
 		endif
 	elseif filewritable(a:file)
 		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'W') == 1
 			let mode = '-f ' . mode
-			let RCS_Out = system(s:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
 		elseif a:mode == 1 || a:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
 			let b:RCS_CheckedOut = a:file
 			return
@@ -441,7 +442,7 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 
 		else
-			let RCS_Out = system(s:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
 		endif
 	endif
 
@@ -505,7 +506,7 @@ function! s:CheckIn(file, ...)  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system(s:sudo . "ci -m" . fullrlog  . " " . s:ShellEscape(a:file))
+	let RCS_Out = system(b:sudo . "ci -m" . fullrlog  . " " . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'ci -m ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
@@ -513,7 +514,7 @@ function! s:CheckIn(file, ...)  " {{{2
 		"echoerr RCS_Out
 	endif
 
-	let RCS_Out = system(s:sudo . 'co -u ' . s:ShellEscape(a:file))
+	let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'co -u ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
