@@ -307,6 +307,7 @@ function! s:rcscomplete(...)
 endfunction
 
 command! RCSsudo let b:sudo="sudo "
+command! RCSwork call s:CheckIn(expand("%:p")) | call s:CheckOut(expand("%:p"))
 
 command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
 			\ s:self,
