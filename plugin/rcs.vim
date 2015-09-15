@@ -293,7 +293,6 @@ endif
 " Autocommands: {{{1
 augroup RCS_plugin
 	au!
-	autocmd FileChangedRO * nested call s:FileChangedRO()
 	autocmd BufUnload * nested call s:BufUnload()
 augroup END
 
