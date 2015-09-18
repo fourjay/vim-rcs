@@ -221,11 +221,11 @@ endif
 " Auto-update the help file if necessary and possible:  {{{1
 let s:self    = expand('<sfile>')
 let s:selfdoc = expand('<sfile>:p:h:h') . '/doc/' . expand('<sfile>:p:t:r') . '.txt'
-" if getftime(s:self) > getftime(s:selfdoc)
-" 	" Do this /after/ Vim has initialized, because tempname() breaks
-" 	" otherwise:
-" 	autocmd VimEnter * RCSUpdateHelp
-" endif  " }}}1
+if getftime(s:self) > getftime(s:selfdoc)
+	" Do this /after/ Vim has initialized, because tempname() breaks
+	" otherwise:
+	autocmd VimEnter * RCSUpdateHelp
+endif  " }}}1
 
 let s:savecpo = &cpoptions
 set cpoptions&vim
@@ -293,7 +293,6 @@ endif
 " Autocommands: {{{1
 augroup RCS_plugin
 	au!
-	 " autocmd FileChangedRO * nested call s:FileChangedRO()
 	autocmd BufUnload * nested call s:BufUnload()
 augroup END
 
