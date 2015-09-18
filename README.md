@@ -1,5 +1,7 @@
 Forked from http://www.vim.org/scripts/script.php?script_id=1111
 
+This is a wrapper around RCS.
+
 RCS is still a fairly decent way to add one-off ad-hoc version control
 particularly for system administration work. The original  plugin 
 works well, but has some issues in this scenario.
@@ -11,13 +13,18 @@ works well, but has some issues in this scenario.
 * I'd like to be able to sudo ci. This mirrors the (various) SudoWrite
   actions.
 
-This is a set of autocommands, commands, and a menu to help you handle RCS controlled files.
+*Original Commands*
+With changes
 
-If you try to modify a readonly file that has a RCS/<file>,v counterpart
-you will be asked if you want to check the file out for modification,
-and when you unload the buffer you'll be prompted if you want to check
-the file back in, and allowed to enter a log message.
+    RCSco   - The same
 
-Most of the commands have corresponding menu items, which should be fairly self-explanatory.
+    RCSco   - made "w" the default
 
-Details are in the auto-generated help file, see ":help rcs.txt".
+    RCSDiff - The same
+
+*New Commands*
+
+    RCSSudo - set a per buffer persistant sudo on RCS commands
+
+    RCSwork - A common workflow, ci, then co -l.
+    This streamlines a common workflow
