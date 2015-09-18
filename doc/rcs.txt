@@ -43,14 +43,13 @@ self-explanatory.
 	Check out the current file readonly (unlocked).
 
 :RCSco w
+        This is the default when no option is passed
+
 	Check out the current file writable (locked).
 	
 	With either use of the ":RCSco" command, Vim will ask if you want to
-	discard changes if you already have a locked/modifiable file, or if
-	you have an unlocked file that appears to have been modified, or if
-	it looks like a user other than you has locked the file.  In the
-	last two cases it is advised that you say no and resolve the
-	differences outside of Vim.
+	discard changes if you already have a locked/modifiable file
+
 
 						*:RCSci*
 :RCSci
@@ -58,14 +57,18 @@ self-explanatory.
 	message, and the file will automatically be checked back out
 	readonly.
 
-						*:RCSUpdateHelp*
-:RCSUpdateHelp [directory]
-	Update the help file for this script.  If you specify a directory
-	the help file will be written there rather than the doc directory
-	relative to where this script is installed--useful if that directory
-	is the wrong one.
-
-
+						*:RCSwork*
+:RCSWork
+	Combine ci and co -l, to contine to "work" on a file. You will
+        be prompted for checkin messge
+	
+						*:RCSsudo*
+:RCSsudo
+	Set the RCS commands to use sudo on a per buffer basis. This
+        allows editing and versioning configuration files from a more
+        full featured user account (in conjunction with one of the many
+        su write tools such as SudoWrite).
+	
 ==============================================================================
 3. Configuration Variables			*rcs-configuration*
 
