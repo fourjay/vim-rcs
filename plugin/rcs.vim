@@ -308,6 +308,8 @@ endfunction
 command! RCSsudo let b:sudo="sudo "
 command! RCSwork call s:CheckIn(expand("%:p")) | call s:CheckOut(expand("%:p"))
 
+command! RCSnostrict :call system( " rcs -U " . expand("%s:p") )
+
 command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
 			\ s:self,
 			\ (<q-args> != '' ? fnamemodify(<q-args> . '/' . fnamemodify(s:self, ':p:t:r') . '.txt', '') : s:selfdoc)
