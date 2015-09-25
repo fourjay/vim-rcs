@@ -310,11 +310,6 @@ command! RCSwork call s:CheckIn(expand("%:p")) | call s:CheckOut(expand("%:p"))
 
 command! RCSnostrict :call system( b:sudo . " rcs -U " . expand("%s:p") )
 
-command! -nargs=? RCSUpdateHelp call s:UpdateHelp(
-			\ s:self,
-			\ (<q-args> != '' ? fnamemodify(<q-args> . '/' . fnamemodify(s:self, ':p:t:r') . '.txt', '') : s:selfdoc)
-		\)
-
 " Functions: {{{1
 
 function! s:FileChangedRO()  " {{{2
@@ -508,10 +503,10 @@ function! s:CheckIn(file, ...)  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system(b:sudo . "ci -m" . fullrlog  . " " . s:ShellEscape(a:file))
+	let RCS_Out = system(b:sudo . "ci -f -m" . fullrlog  . " " . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'ci -m ...':"
-		echohl ErrorMsg | :echo RCS_Out | :echohl None
+		echohl ErrorMsg | echo RCS_Out | echohl None
 		let v:errmsg = RCS_Out
 		"echoerr RCS_Out
 	endif
@@ -519,7 +514,7 @@ function! s:CheckIn(file, ...)  " {{{2
 	let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'co -u ...':"
-		echohl ErrorMsg | :echo RCS_Out | :echohl None
+		echohl ErrorMsg | echo RCS_Out | echohl None
 		let v:errmsg = RCS_Out
 		"echoerr RCS_Out
 	endif
@@ -805,6 +800,7 @@ function! s:WinLocalVars(var)  " {{{2
 endfunction
 
 function! s:UpdateHelp(self, doc)  " {{{2
+        return
 	let docdir = fnamemodify(a:doc, ':p:h')
 
 	if ! isdirectory(docdir)
