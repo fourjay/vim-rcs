@@ -300,7 +300,7 @@ function! s:rcscomplete(...)
 endfunction
 
 command! RCSsudo let b:sudo="sudo "
-command! RCSwork call s:CheckIn(expand("%:p")) | call s:CheckOut(expand("%:p"))
+command! RCSwork call s:CheckIn(expand("%:p"), "lock" )
 
 command! RCSnostrict :call system( b:sudo . " rcs -U " . expand("%s:p") )
 
@@ -468,6 +468,11 @@ function! s:CheckIn(file, ...)  " {{{2
 		return
 	endif
 
+        let lock_flag = ''
+        if a:0 > 0
+            let lock_flag = " -l "
+        endif
+
 	call setbufvar(a:file, 'RCS_CheckedOut', '')
 
 	let message=printf('%-70s', 'Enter log message for "' . fnamemodify(a:file, ':t') . '" (. to end):')
@@ -497,7 +502,7 @@ function! s:CheckIn(file, ...)  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system(b:sudo . "ci -f -m" . fullrlog  . " " . s:ShellEscape(a:file))
+	let RCS_Out = system(b:sudo . "ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'ci -m ...':"
 		echohl ErrorMsg | echo RCS_Out | echohl None
@@ -505,13 +510,15 @@ function! s:CheckIn(file, ...)  " {{{2
 		"echoerr RCS_Out
 	endif
 
-	let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
-	if v:shell_error
-		echoerr "Nonzero exit status from 'co -u ...':"
-		echohl ErrorMsg | echo RCS_Out | echohl None
-		let v:errmsg = RCS_Out
-		"echoerr RCS_Out
-	endif
+        if lock_flag == ''
+            let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
+            if v:shell_error
+                    echoerr "Nonzero exit status from 'co -u ...':"
+                    echohl ErrorMsg | echo RCS_Out | echohl None
+                    let v:errmsg = RCS_Out
+                    "echoerr RCS_Out
+            endif
+        endif
 
 	if a:0 >= 1 && a:1 == 0
 		return
