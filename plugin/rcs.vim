@@ -359,6 +359,7 @@ function! s:Diff(file)  " {{{2
 	exe 'setlocal filetype=' . filetype . ' syntax=' . syntax
 	setlocal buftype=nofile noswapfile foldmethod=diff readonly nomodifiable
 	setlocal bufhidden=wipe
+        nnoremap <buffer> <nowait> q :bwipe<cr>
 
 	exe 'autocmd! BufDelete <buffer> ' .
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&diff", "0") | '
@@ -691,11 +692,15 @@ function! s:LogDiff()  " {{{2
 	silent exe 'read !co -p -r' . idarr2[0] . ' ' . s:ShellEscape(rcs_filename) . ' 2>/dev/null'
 	diffthis
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
+        nnoremap <buffer> <nowait> q :bwipe<Cr>
+         " nnoremap <buffer> <nowait> j :wincmd j<cr> | :wincmd j
 
 	exe 'silent vertical rightbelow new [' . file_escaped . ', revision ' . idarr1[0] . ']'
 	silent exe 'read !co -p -r' . idarr1[0] . ' ' . s:ShellEscape(rcs_filename) . ' 2>/dev/null'
 	diffthis
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
+        nnoremap <buffer> <nowait> q :bwipe<Cr>
+        nnoremap <buffer> <nowait> j :wincmd j<cr>
 
 	wincmd p
 	wincmd _
