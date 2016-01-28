@@ -538,9 +538,11 @@ endfunction
 function! s:ViewLog(file)  " {{{2
 	let file_escaped=escape(fnamemodify(a:file, ':t'), ' \')
 
+        " store b:sudo for new window
         let l:do_sudo = b:sudo
 	exe 'silent topleft new [RCS\ log\ for\ ' . file_escaped . ']'
 	let b:rcs_filename = a:file
+        " re-register b:sudo
         let b:sudo = l:do_sudo
 
 	call s:ViewLog2(a:file)
@@ -719,6 +721,10 @@ function! s:EditLogItem()  " {{{2
 
 	let rcs_filename = b:rcs_filename
 
+        " add support for sudo grab buffer variable for later
+        " re-registration
+        let do_sudo = b:sudo
+
 	let curline = line('.')
 	let idarr = s:GetLogId(curline)
 
@@ -736,6 +742,8 @@ function! s:EditLogItem()  " {{{2
 		setlocal buftype=acwrite bufhidden=wipe
 		let b:rcs_id       = idarr[0]
 		let b:rcs_filename = rcs_filename
+                " re-register b:sudo flag for edit window
+                let b:sudo = do_sudo
 		silent! execute 'read !rlog -r' . idarr[0] . ' ' . s:ShellEscape(rcs_filename)
 		silent! 1,/^revision .\+\ndate: \d\{4\}\/\d\d\/\d\d \d\d:\d\d:\d\d.*/+1 delete
 		silent! $delete
@@ -779,7 +787,7 @@ function! s:SaveLogItem()  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system("rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename))
+	let RCS_Out = system( b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename))
 	if v:shell_error
 		echoerr "Nonzero exit status from 'ci -m ...':"
 		echohl ErrorMsg | :echo RCS_Out | :echohl None
