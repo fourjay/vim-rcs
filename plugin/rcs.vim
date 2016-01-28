@@ -538,8 +538,10 @@ endfunction
 function! s:ViewLog(file)  " {{{2
 	let file_escaped=escape(fnamemodify(a:file, ':t'), ' \')
 
+        let l:do_sudo = b:sudo
 	exe 'silent topleft new [RCS\ log\ for\ ' . file_escaped . ']'
 	let b:rcs_filename = a:file
+        let b:sudo = l:do_sudo
 
 	call s:ViewLog2(a:file)
 
@@ -566,7 +568,7 @@ function! s:ViewLog(file)  " {{{2
 
 	normal zR
 
-	nnoremap <buffer> q <C-w>c
+	nnoremap <buffer> <nowait> q <C-w>c
 	nnoremap <buffer> <space> <C-f>
 	nnoremap <buffer> b <C-b>
 	nnoremap <silent> <buffer> J :if search('^-\+\nrevision \d\+\.\d\+', 'W')<bar>exe 'normal j'<bar>endif<CR>
