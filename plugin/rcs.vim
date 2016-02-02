@@ -707,6 +707,7 @@ function! s:LogDiff()  " {{{2
         nnoremap <buffer> <nowait> j :wincmd j<cr>
 
 	wincmd p
+        nnoremap <buffer> <nowait> q :wincmd l<cr>:bwipe<cr>:bwipe<cr>
 	wincmd _
 	1
 endfunction
