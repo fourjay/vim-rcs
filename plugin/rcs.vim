@@ -463,12 +463,37 @@ function! s:CheckOut(file, ...)  " {{{2
         redraw!
 endfunction
 
+function! s:open_commit()
+    let log_buf_name = "__RCS_COMMIT_MSG__"
+    let log_win_height = 5
+    let rcs_file = expand("%:p")
+    echom "rcs_file is " . rcs_file
+    execute log_win_height . "split " . log_buf_name
+    setlocal textwidth=70
+     " setlocal buftype=nofile
+     " setlocal bufhidden=wipe
+    setlocal noswapfile
+    let b:rcs_filename = rcs_file
+    autocmd BufWriteCmd <buffer> call s:write_commit( )
+endfunction
+
+function! s:write_commit()
+    let msg_a = getbufline( '%', 1, '$' )
+    let msg = join( msg_a, "\r" )
+    let msg = s:ShellEscape(msg)
+    let msg = substitute(msg, '\\'."\n", "\n", 'g')
+    setlocal buftype=nofile
+    call s:do_rcs_command( "ci -f -m " . msg . " ", b:rcs_filename)
+endfunction
+
 function! s:CheckIn(file, ...)  " {{{2
 	if (getbufvar(a:file, '&modified') == 1)
 				\ && (confirm(fnamemodify(a:file, ':t') . " has unwritten changes, check in anyway?", "&Yes\n&No", 2, "Q") != 1)
 		return
 	endif
 
+        call s:open_commit()
+        return
         let lock_flag = ''
         if a:0 > 0
             let lock_flag = " -l "
@@ -763,6 +788,23 @@ function! s:EditLogItem()  " {{{2
 	endif
 endfunction
 
+function! s:do_rcs_command(cmd, file)
+    let sudo = ""
+    if exists("b:sudo")
+        let sudo = b:sudo
+    endif
+    echom "cmd is " . a:cmd
+    echom "file is " . a:file
+    return
+     " echom "let RCS_Out = system( " . sudo . a:cmd . " " . s:ShellEscape(a:file)
+    let RCS_Out = system( sudo . a:cmd . " " . s:ShellEscape(a:file) )
+    if v:shell_error
+        echoerr "Nonzero exit status from '" . a:cmd . "'...':"
+        echohl ErrorMsg | echo RCS_Out | echohl None
+        let v:errmsg = RCS_Out
+    endif
+endfunction
+
 function! s:SaveLogItem()  " {{{2
 	if ! exists('b:rcs_id') || ! exists('b:rcs_filename')
 		return 0
@@ -876,91 +918,3 @@ endfunction
 
 let &cpoptions = s:savecpo
 unlet s:savecpo
-
-finish " -- Help file follows: {{{
-
-*rcs.txt*	Assist with editing RCS controlled files.
-		Author: Christian J. Robinson
-
-					*rcs.vim* *rcs*
-
-This is a set of autocommands, commands, and a menu to help you handle RCS
-controlled files.  It requires Vim 7.0 or later to run.
-
-------------------------------------------------------------------------------
-
-1. Introduction				|rcs-intro|
-2. Commands				|rcs-commands|
-3. Configuration Variables		|rcs-configuration|
-
-==============================================================================
-1. Introduction					*rcs-intro*
-
-If you try to modify a readonly file that has a RCS/<file>,v counterpart you
-will be asked if you want to check the file out for modification, and when
-you unload the buffer you'll be prompted if you want to check the file back
-in, and allowed to enter a log message.
-
-The commands have corresponding menu items, which should be fairly
-self-explanatory.
-
-==============================================================================
-2. Commands					*rcs-commands*
-
-						*:RCSdiff*
-:RCSdiff
-	View the differences between the working file and the last revision,
-	using vimdiff.
-
-						*:RCSlog*
-:RCSlog
-	Show the entire log file--syntax highlighted--in a split window.
-	Individual log entries can be edited from this display.  And you can
-	show the differences between two consecutive versions.
-
-						*:RCSco*
-:RCSco ro
-	Check out the current file readonly (unlocked).
-
-:RCSco w
-	Check out the current file writable (locked).
-	
-	With either use of the ":RCSco" command, Vim will ask if you want to
-	discard changes if you already have a locked/modifiable file, or if
-	you have an unlocked file that appears to have been modified, or if
-	it looks like a user other than you has locked the file.  In the
-	last two cases it is advised that you say no and resolve the
-	differences outside of Vim.
-
-						*:RCSci*
-:RCSci
-	Check the current (changed) file in, you will be prompted for a log
-	message, and the file will automatically be checked back out
-	readonly.
-
-						*:RCSUpdateHelp*
-:RCSUpdateHelp [directory]
-	Update the help file for this script.  If you specify a directory
-	the help file will be written there rather than the doc directory
-	relative to where this script is installed--useful if that directory
-	is the wrong one.
-
-
-==============================================================================
-3. Configuration Variables			*rcs-configuration*
-
-*g:rcs_plugin_toplevel_menu*
-The name of the menu to place the RCS menu into, if you don't want it at the
-top level.
-
-*g:rcs_plugin_menu_priority*
-The menu priority to use for the RCS menu.
-
-*g:rcs_plugin_menu_force*
-Force loading of the menu in console Vim.
-
-Examples: >
- :let g:rcs_plugin_toplevel_menu = '&Misc'
- :let g:rcs_plugin_menu_priority = '130.10'
- :let g:rcs_plugin_menu_force = 1
-<
