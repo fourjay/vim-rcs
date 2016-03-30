@@ -412,7 +412,9 @@ function! s:CheckOut(file, ...)  " {{{2
 	let locker = s:CheckForLock(a:file)
 
 	if locker != '' && locker != $LOGNAME . 'a'
-		if confirm(a:file . " appears to have been locked by username '" . locker . "'.\nForce a check out anyway (this could cause loss of data)?", "&Yes\n&No", 2, 'W') == 2
+		let confirm_promt =                 a:file . " appears to have been locked by username '" . locker . "'.\n"
+                let confirm_promt = confirm_promt . "Force a check out anyway (this could cause loss of data)?"
+		if confirm(confirm_promt, "&Yes\n&No", 2, 'W') == 2
 			return
 		else
 			let mode = '-f ' . mode
