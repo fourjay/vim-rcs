@@ -439,11 +439,7 @@ function! s:CheckOut(file, ...)  " {{{2
 	endif
 
 	if v:shell_error
-		echoerr "Nonzero exit status from 'co " . mode . "...':"
-		echohl ErrorMsg | :echo RCS_Out | :echohl None
-		let v:errmsg = RCS_Out
-		"echoerr RCS_Out
-
+		call s:print_error( 'co ' . mode, RCS_Out)
 		return 1
 	endif
 
@@ -503,21 +499,15 @@ function! s:CheckIn(file, ...)  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system(b:sudo . "ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file))
-	if v:shell_error
-		echoerr "Nonzero exit status from 'ci -m ...':"
-		echohl ErrorMsg | echo RCS_Out | echohl None
-		let v:errmsg = RCS_Out
-		"echoerr RCS_Out
-	endif
+	let RCS_Out = system(b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file))
+        if v:shell_error
+            call s:print_error( 'ci -f', RCS_Out )
+        endif
 
         if lock_flag == ''
             let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
-            if v:shell_error
-                    echoerr "Nonzero exit status from 'co -u ...':"
-                    echohl ErrorMsg | echo RCS_Out | echohl None
-                    let v:errmsg = RCS_Out
-                    "echoerr RCS_Out
+            if v:shell_error 
+                call s:print_error( 'co -u', RCS_Out ) 
             endif
         endif
 
@@ -789,11 +779,9 @@ function! s:SaveLogItem()  " {{{2
 	endif
 
 	let RCS_Out = system( b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename))
-	if v:shell_error
-		echoerr "Nonzero exit status from 'ci -m ...':"
-		echohl ErrorMsg | :echo RCS_Out | :echohl None
-		let v:errmsg = RCS_Out
-	endif
+	if v:shell_error 
+            call s:print_error('ci -m', RCS_Out) 
+        endif
 
 	setlocal nomodified
 endfunction
@@ -858,6 +846,14 @@ function! s:UpdateHelp(self, doc)  " {{{2
 	silent execute 'helptags ' . docdir
 
 	return 1
+endfunction
+
+function! s:print_error(cmd, error)
+    echohl ErrorMsg
+    echo "Nonzero exit status from: " . a:cmd
+    echo a:error
+    echohl None
+    let v:errmsg = a:error
 endfunction
 
 function! s:ShellEscape(str) " {{{2
