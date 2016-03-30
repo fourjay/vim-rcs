@@ -434,12 +434,13 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 
 		else
-			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let co_cmd = b:sudo . 'co ' . mode . s:ShellEscape(a:file)
+			let RCS_Out = system(co_cmd)
 		endif
 	endif
 
 	if v:shell_error
-		call s:print_error( 'co ' . mode, RCS_Out)
+		call s:print_error( co_cmd, RCS_Out)
 		return 1
 	endif
 
@@ -499,15 +500,17 @@ function! s:CheckIn(file, ...)  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system(b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file))
+        let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file)
+	let RCS_Out = system( ci_cmd )
         if v:shell_error
-            call s:print_error( 'ci -f', RCS_Out )
+            call s:print_error( ci_cmd, RCS_Out )
         endif
 
         if lock_flag == ''
-            let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
+            let co_cmd = b:sudo . 'co -u ' . s:ShellEscape(a:file)
+            let RCS_Out = system(co_cmd)
             if v:shell_error 
-                call s:print_error( 'co -u', RCS_Out ) 
+                call s:print_error( co_cmd, RCS_Out ) 
             endif
         endif
 
@@ -778,9 +781,10 @@ function! s:SaveLogItem()  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system( b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename))
+	let rcs_cmd =  b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename)
+	let RCS_Out = system(rcs_cmd)
 	if v:shell_error 
-            call s:print_error('ci -m', RCS_Out) 
+            call s:print_error(rcs_cmd, RCS_Out) 
         endif
 
 	setlocal nomodified
