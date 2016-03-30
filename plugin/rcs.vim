@@ -506,6 +506,10 @@ function! s:CheckIn(file, ...)  " {{{2
 	let RCS_Out = system( ci_cmd )
         if v:shell_error
             call s:print_error( ci_cmd, RCS_Out )
+        else
+            if exists( '#User#RCSciEvent' )
+                doautocmd User RCSciEvent
+            endif
         endif
 
         if lock_flag == ''
