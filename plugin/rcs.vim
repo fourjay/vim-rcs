@@ -478,11 +478,13 @@ endfunction
 
 function! s:write_commit()
     let msg_a = getbufline( '%', 1, '$' )
+    let msg_a = filter(msg_a, 'v:val !~ ''^\s*VCS:''')
     let msg = join( msg_a, "\r" )
     let msg = s:ShellEscape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
     setlocal buftype=nofile
-    call s:do_rcs_command( "ci -f -m " . msg . " ", b:rcs_filename)
+    call s:do_rcs_command( "ci -l -m" . msg . " ", b:rcs_filename)
+    bdelete
 endfunction
 
 function! s:CheckIn(file, ...)  " {{{2
@@ -788,19 +790,10 @@ function! s:EditLogItem()  " {{{2
 endfunction
 
 function! s:do_rcs_command(cmd, file)
-    let sudo = ""
-    if exists("b:sudo")
-        let sudo = b:sudo
-    endif
-    echom "cmd is " . a:cmd
-    echom "file is " . a:file
-    return
-     " echom "let RCS_Out = system( " . sudo . a:cmd . " " . s:ShellEscape(a:file)
-    let RCS_Out = system( sudo . a:cmd . " " . s:ShellEscape(a:file) )
+    let full_cmd  = sudo . a:cmd . " " . s:ShellEscape(a:file)
+    let RCS_Out = system( full_cmd )
     if v:shell_error
-        echoerr "Nonzero exit status from '" . a:cmd . "'...':"
-        echohl ErrorMsg | echo RCS_Out | echohl None
-        let v:errmsg = RCS_Out
+        call s:print_error(full_cmd, RCS_Out) 
     endif
 endfunction
 
