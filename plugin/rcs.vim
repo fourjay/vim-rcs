@@ -412,7 +412,9 @@ function! s:CheckOut(file, ...)  " {{{2
 	let locker = s:CheckForLock(a:file)
 
 	if locker != '' && locker != $LOGNAME . 'a'
-		if confirm(a:file . " appears to have been locked by username '" . locker . "'.\nForce a check out anyway (this could cause loss of data)?", "&Yes\n&No", 2, 'W') == 2
+		let confirm_promt =                 a:file . " appears to have been locked by username '" . locker . "'.\n"
+                let confirm_promt = confirm_promt . "Force a check out anyway (this could cause loss of data)?"
+		if confirm(confirm_promt, "&Yes\n&No", 2, 'W') == 2
 			return
 		else
 			let mode = '-f ' . mode
@@ -434,16 +436,13 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 
 		else
-			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let co_cmd = b:sudo . 'co ' . mode . s:ShellEscape(a:file)
+			let RCS_Out = system(co_cmd)
 		endif
 	endif
 
 	if v:shell_error
-		echoerr "Nonzero exit status from 'co " . mode . "...':"
-		echohl ErrorMsg | :echo RCS_Out | :echohl None
-		let v:errmsg = RCS_Out
-		"echoerr RCS_Out
-
+		call s:print_error( co_cmd, RCS_Out)
 		return 1
 	endif
 
@@ -528,21 +527,21 @@ function! s:CheckIn(file, ...)  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system(b:sudo . "ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file))
-	if v:shell_error
-		echoerr "Nonzero exit status from 'ci -m ...':"
-		echohl ErrorMsg | echo RCS_Out | echohl None
-		let v:errmsg = RCS_Out
-		"echoerr RCS_Out
-	endif
+        let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file)
+	let RCS_Out = system( ci_cmd )
+        if v:shell_error
+            call s:print_error( ci_cmd, RCS_Out )
+        else
+            if exists( '#User#RCSciEvent' )
+                doautocmd User RCSciEvent
+            endif
+        endif
 
         if lock_flag == ''
-            let RCS_Out = system(b:sudo . 'co -u ' . s:ShellEscape(a:file))
-            if v:shell_error
-                    echoerr "Nonzero exit status from 'co -u ...':"
-                    echohl ErrorMsg | echo RCS_Out | echohl None
-                    let v:errmsg = RCS_Out
-                    "echoerr RCS_Out
+            let co_cmd = b:sudo . 'co -u ' . s:ShellEscape(a:file)
+            let RCS_Out = system(co_cmd)
+            if v:shell_error 
+                call s:print_error( co_cmd, RCS_Out ) 
             endif
         endif
 
@@ -830,12 +829,11 @@ function! s:SaveLogItem()  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let RCS_Out = system( b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename))
-	if v:shell_error
-		echoerr "Nonzero exit status from 'ci -m ...':"
-		echohl ErrorMsg | :echo RCS_Out | :echohl None
-		let v:errmsg = RCS_Out
-	endif
+	let rcs_cmd =  b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename)
+	let RCS_Out = system(rcs_cmd)
+	if v:shell_error 
+            call s:print_error(rcs_cmd, RCS_Out) 
+        endif
 
 	setlocal nomodified
 endfunction
@@ -900,6 +898,14 @@ function! s:UpdateHelp(self, doc)  " {{{2
 	silent execute 'helptags ' . docdir
 
 	return 1
+endfunction
+
+function! s:print_error(cmd, error)
+    echohl ErrorMsg
+    echo "Nonzero exit status from: " . a:cmd
+    echo a:error
+    echohl None
+    let v:errmsg = a:error
 endfunction
 
 function! s:ShellEscape(str) " {{{2
