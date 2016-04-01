@@ -485,6 +485,9 @@ function! s:write_commit()
     setlocal buftype=nofile
     call s:do_rcs_command( "ci -l -m" . msg . " ", b:rcs_filename)
     bdelete
+    if exists( '#User#RCSciEvent' )
+        doautocmd User RCSciEvent
+    endif
 endfunction
 
 function! s:CheckIn(file, ...)  " {{{2
