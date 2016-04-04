@@ -466,28 +466,59 @@ function! s:open_commit()
     let log_buf_name = "__RCS_COMMIT_MSG__"
     let log_win_height = 5
     let rcs_file = expand("%:p")
-    echom "rcs_file is " . rcs_file
-    execute log_win_height . "split " . log_buf_name
+    call s:set_rcsfilename( rcs_file )
+    let b:rcs_filename = rcs_file
+    execute 'keepalt ' . log_win_height . "split " . log_buf_name
+    if exists( '#User#RCSnewBufferEvent' )
+        doautocmd User RCSnewBufferEvent
+    endif
+    let rcs_file = expand("%:p")
+    call append(0, "# RCS - write to commit")
+    call append(0, "# RCS - lines beginning with # RCS will be stripped")
     setlocal textwidth=70
-     " setlocal buftype=nofile
-     " setlocal bufhidden=wipe
     setlocal noswapfile
+    setlocal buftype=acwrite
+    setlocal bufhidden=wipe
+    nnoremap <buffer> ZZ :write<cr>
     let b:rcs_filename = rcs_file
     autocmd BufWriteCmd <buffer> call s:write_commit( )
+    autocmd BufWritePost <buffer> call s:rcs_write_buffer_cleanup( )
 endfunction
 
 function! s:write_commit()
     let msg_a = getbufline( '%', 1, '$' )
-    let msg_a = filter(msg_a, 'v:val !~ ''^\s*VCS:''')
+    let msg_a = filter(msg_a, 'v:val !~ "^\s*#[ ]*RCS"')
     let msg = join( msg_a, "\r" )
     let msg = s:ShellEscape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
-    setlocal buftype=nofile
-    call s:do_rcs_command( "ci -l -m" . msg . " ", b:rcs_filename)
-    bdelete
+    call s:do_rcs_command( "ci -l -m" . msg . " ", s:get_rcsfilename() )
+    call s:rcs_write_buffer_cleanup()
+endfunction
+
+function! s:rcs_write_buffer_cleanup()
+    let rcs_cleanup_window = bufnr('__RCS_COMMIT_MSG__')
+    let current_window = bufnr('%')
+    if rcs_cleanup_window != ''
+        if rcs_cleanup_window != current_window
+            execute  rcs_cleanup_window . 'wincmd w'
+        endif
+        setlocal bufhidden=wipe
+        setlocal buftype=nofile
+        bdelete
+    endif
     if exists( '#User#RCSciEvent' )
+        echom "triggering RCSciEvent"
         doautocmd User RCSciEvent
     endif
+endfunction
+
+let s:rcs_filename = ''
+function! s:set_rcsfilename(filename)
+    let s:rcs_filename = a:filename
+endfunction
+
+function! s:get_rcsfilename()
+        return s:rcs_filename
 endfunction
 
 function! s:CheckIn(file, ...)  " {{{2
@@ -793,6 +824,10 @@ function! s:EditLogItem()  " {{{2
 endfunction
 
 function! s:do_rcs_command(cmd, file)
+    let sudo = ''
+    if exists("b:sudo")
+        let sudo = b:sudo
+    endif
     let full_cmd  = sudo . a:cmd . " " . s:ShellEscape(a:file)
     let RCS_Out = system( full_cmd )
     if v:shell_error
