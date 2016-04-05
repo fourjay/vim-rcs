@@ -32,3 +32,5 @@ With changes
 
     RCSwork - A common workflow, ci, then co -l.
     This streamlines a common workflow
+
+    RCSnostrict - enable loose(r) lock behavior ``rcs -U [filename]``
