@@ -75,6 +75,10 @@ will be deleted
         allows editing and versioning configuration files from a more
         full featured user account (in conjunction with one of the many
         su write tools such as SudoWrite).
+
+						*:RCSnostrict*
+:RCSnostrict
+	Set non-strict locking
 	
 ==============================================================================
 3. Configuration Variables			*rcs-configuration*
