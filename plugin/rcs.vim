@@ -538,33 +538,6 @@ function! s:CheckIn(file, ...)  " {{{2
 
 	call setbufvar(a:file, 'RCS_CheckedOut', '')
 
-	 " let message=printf('%-70s', 'Enter log message for "' . fnamemodify(a:file, ':t') . '" (. to end):')
-
-	 " if strlen(message) <= 70
-		 " if &columns >= 80
-			 " echo message . "<-70 80->|\n"
-		 " else
-			 " echo message . "<-70\n"
-		 " endif
-	 " endif
-
-	 " let rlog = "" | let fullrlog = ""
-
-	 " while rlog != "."
-		 " let fullrlog = fullrlog . "\n" . rlog
-		 " let rlog = input("> ")
-		 " echo "  " . rlog . "\n"
-	 " endwhile
-
-	 " if fullrlog =~ '^[[:return:][:space:]]*$'
-		 " let fullrlog = '*** empty log message ***'
-	 " endif
-
-	 " let fullrlog = s:ShellEscape(fullrlog)
-	 " if v:version >= 702
-		 " let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
-	 " endif
-
          " let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file)
         let ci_cmd = b:sudo . " ci -f " . lock_flag
         call s:open_commit(ci_cmd)
