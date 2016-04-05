@@ -24,6 +24,13 @@ in, and allowed to enter a log message.
 The commands have corresponding menu items, which should be fairly
 self-explanatory.
 
+The log message uses a vim buffer. A write event will commit the
+message. This follows CVS convention where lines beginning with
+<
+# RCS
+>
+will be deleted
+
 ==============================================================================
 2. Commands					*rcs-commands*
 
@@ -87,3 +94,14 @@ Examples: >
  :let g:rcs_plugin_menu_priority = '130.10'
  :let g:rcs_plugin_menu_force = 1
 <
+
+*RCSciEvent*
+User command called when ci is completed
+
+Example: >
+:autocmd User RCSciEvent call DoGutterMarksUpdate()
+<
+
+*RCSnewBufferEvent*
+User command called when new commit message buffer is created.
+Add custom behavior to commit message buffer
