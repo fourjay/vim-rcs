@@ -13,6 +13,10 @@ works well, but has some issues in this scenario.
 * I'd like to be able to sudo ci. This mirrors the (various) SudoWrite
   actions.
 
+The original uses input() to emulate rcs's primitive editor. This seems
+a waste, as vim is a superb editor. I've altered the code to use a vim
+split.
+
 *Original Commands*
 With changes
 
