@@ -462,7 +462,8 @@ function! s:CheckOut(file, ...)  " {{{2
         redraw!
 endfunction
 
-function! s:open_commit()
+function! s:open_commit(cmd)
+    let ci_cmd = a:cmd
     let log_buf_name = "__RCS_COMMIT_MSG__"
     let log_win_height = 5
     let rcs_file = expand("%:p")
@@ -479,19 +480,23 @@ function! s:open_commit()
     setlocal noswapfile
     setlocal buftype=acwrite
     setlocal bufhidden=wipe
+    setlocal ft=rcscommit
+    setlocal syntax=conf
     nnoremap <buffer> ZZ :write<cr>
     let b:rcs_filename = rcs_file
-    autocmd BufWriteCmd <buffer> call s:write_commit( )
+    let b:ci_cmd = ci_cmd
+    autocmd BufWriteCmd <buffer> call s:write_commit()
     autocmd BufWritePost <buffer> call s:rcs_write_buffer_cleanup( )
 endfunction
 
 function! s:write_commit()
+     " echom "in write_commit " . b:ci_cmd
     let msg_a = getbufline( '%', 1, '$' )
     let msg_a = filter(msg_a, 'v:val !~ "^\s*#[ ]*RCS"')
     let msg = join( msg_a, "\r" )
     let msg = s:ShellEscape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
-    call s:do_rcs_command( "ci -l -m" . msg . " ", s:get_rcsfilename() )
+    call s:do_rcs_command( b:ci_cmd . " -m" . msg . " ", s:get_rcsfilename() )
     call s:rcs_write_buffer_cleanup()
 endfunction
 
@@ -507,7 +512,6 @@ function! s:rcs_write_buffer_cleanup()
         bdelete
     endif
     if exists( '#User#RCSciEvent' )
-        echom "triggering RCSciEvent"
         doautocmd User RCSciEvent
     endif
 endfunction
@@ -527,8 +531,6 @@ function! s:CheckIn(file, ...)  " {{{2
 		return
 	endif
 
-        call s:open_commit()
-        return
         let lock_flag = ''
         if a:0 > 0
             let lock_flag = " -l "
@@ -536,34 +538,37 @@ function! s:CheckIn(file, ...)  " {{{2
 
 	call setbufvar(a:file, 'RCS_CheckedOut', '')
 
-	let message=printf('%-70s', 'Enter log message for "' . fnamemodify(a:file, ':t') . '" (. to end):')
+	 " let message=printf('%-70s', 'Enter log message for "' . fnamemodify(a:file, ':t') . '" (. to end):')
 
-	if strlen(message) <= 70
-		if &columns >= 80
-			echo message . "<-70 80->|\n"
-		else
-			echo message . "<-70\n"
-		endif
-	endif
+	 " if strlen(message) <= 70
+		 " if &columns >= 80
+			 " echo message . "<-70 80->|\n"
+		 " else
+			 " echo message . "<-70\n"
+		 " endif
+	 " endif
 
-	let rlog = "" | let fullrlog = ""
+	 " let rlog = "" | let fullrlog = ""
 
-	while rlog != "."
-		let fullrlog = fullrlog . "\n" . rlog
-		let rlog = input("> ")
-		echo "  " . rlog . "\n"
-	endwhile
+	 " while rlog != "."
+		 " let fullrlog = fullrlog . "\n" . rlog
+		 " let rlog = input("> ")
+		 " echo "  " . rlog . "\n"
+	 " endwhile
 
-	if fullrlog =~ '^[[:return:][:space:]]*$'
-		let fullrlog = '*** empty log message ***'
-	endif
+	 " if fullrlog =~ '^[[:return:][:space:]]*$'
+		 " let fullrlog = '*** empty log message ***'
+	 " endif
 
-	let fullrlog = s:ShellEscape(fullrlog)
-	if v:version >= 702
-		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
-	endif
+	 " let fullrlog = s:ShellEscape(fullrlog)
+	 " if v:version >= 702
+		 " let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
+	 " endif
 
-        let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file)
+         " let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file)
+        let ci_cmd = b:sudo . " ci -f " . lock_flag
+        call s:open_commit(ci_cmd)
+        return
 	let RCS_Out = system( ci_cmd )
         if v:shell_error
             call s:print_error( ci_cmd, RCS_Out )
