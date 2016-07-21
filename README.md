@@ -1,6 +1,12 @@
+Updated RCS wrapper
+===================
+
 Forked from http://www.vim.org/scripts/script.php?script_id=1111
 
-This is a wrapper around RCS.
+This is a wrapper around RCS. Unlike the original plugin this uses normal vim
+editing commands for commit messages. It's also been tweaked for my use cases,
+in particular support for privilege escalation through sudo and repeated
+edit -> cycles.
 
 RCS is still a fairly decent way to add one-off ad-hoc version control
 particularly for system administration work. The original  plugin 
