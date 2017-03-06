@@ -370,9 +370,9 @@ function! s:Diff(file)  " {{{2
 		\ 'call setwinvar(bufwinnr(' . curbuf . '), "&foldmethod", "' . foldmethod . '") | '
 		\ 'redraw!'
 
-	normal zX
-	wincmd p
-	normal zX
+	normal! zX
+	wincmd! p
+	normal! zX
 endfunction
 
 function! s:CheckForLock(file) " {{{2
@@ -606,12 +606,12 @@ function! s:ViewLog(file)  " {{{2
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
 	setlocal foldexpr=RCSFoldLog() foldmethod=expr
 
-	normal zR
+	normal! zR
 
 	nnoremap <buffer> <nowait> q <C-w>c
 	nnoremap <buffer> <space> <C-f>
 	nnoremap <buffer> b <C-b>
-	nnoremap <silent> <buffer> J :if search('^-\+\nrevision \d\+\.\d\+', 'W')<bar>exe 'normal j'<bar>endif<CR>
+	nnoremap <silent> <buffer> J :if search('^-\+\nrevision \d\+\.\d\+', 'W')<bar>exe 'normal! j'<bar>endif<CR>
 	nnoremap <silent> <buffer> K :call search('^revision \d\+\.\d\+', 'Wb')<CR>
 				\:call search('^-\+\nrevision \d\+\.\d\+', 'Wb')<CR>j
 	nnoremap <silent> <buffer> <cr> :call <SID>EditLogItem()<CR>
