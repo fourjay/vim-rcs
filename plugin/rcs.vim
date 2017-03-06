@@ -371,7 +371,7 @@ function! s:Diff(file)  " {{{2
 		\ 'redraw!'
 
 	normal! zX
-	wincmd! p
+	wincmd p
 	normal! zX
 endfunction
 
