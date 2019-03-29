@@ -623,10 +623,10 @@ endfunction
 
 function! s:do_rcs_command(cmd, file)
     let sudo = ''
-    if exists("b:sudo")
+    if exists('b:sudo')
         let sudo = b:sudo
     endif
-    let full_cmd  = sudo . a:cmd . " " . s:ShellEscape(a:file)
+    let full_cmd  = sudo . a:cmd . ' ' . s:ShellEscape(a:file)
     let RCS_Out = system( full_cmd )
     if v:shell_error
         call s:print_error(full_cmd, RCS_Out) 
@@ -683,50 +683,6 @@ function! s:WinLocalVars(var)  " {{{2
 		endfor
 	endfor
 	return vals
-endfunction
-
-function! s:UpdateHelp(self, doc)  " {{{2
-        return
-	let docdir = fnamemodify(a:doc, ':p:h')
-
-	if ! isdirectory(docdir)
-		call mkdir(docdir, 'p')
-	endif
-
-	if filewritable(docdir) != 2
-		echohl ErrorMsg
-		echomsg "Can't write to directory \"" . docdir . "\"." . 
-					\"  Please make sure it exists as a directory and is writable."
-		echohl None
-		return 0
-	endif
-
-	echomsg "Updating help file for " . fnamemodify(a:self, ':p:t')
-
-	let lines = readfile(a:self)
-
-	if len(lines) <= 0
-		echohl ErrorMsg
-		echomsg "Unable to scan \"" . a:self . "\" for help file."
-		echohl None
-		return 0
-	endif
-
-	for i in range(len(lines))
-		if lines[i] =~ '^" Last Change:'
-			let lastchange = substitute(lines[i], '" ', '\t\t', '')
-		elseif lines[i] =~ '^finish " -- Help file follows: {\{3}$'
-			let starthelp = i + 2
-			break
-		endif
-	endfor
-
-	call insert(lines, lastchange, starthelp + 1)
-	call writefile(lines[starthelp :], a:doc)
-
-	silent execute 'helptags ' . docdir
-
-	return 1
 endfunction
 
 function! s:print_error(cmd, error)
