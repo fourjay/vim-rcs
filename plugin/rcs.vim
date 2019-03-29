@@ -145,18 +145,14 @@ endfunction
 
 function! s:Diff(file)  " {{{2
 	if len(s:WinLocalVars('&diff')) > 0
-		echohl ErrorMsg
-		echomsg "It appears Vim is already running a diff, close those buffers first."
-		echohl None
+		call rcs#alert( "It appears Vim is already running a diff, close those buffers first." )
 		return 0
 	endif
 
 	let rcs_diff_name = "[Previous version of " . fnamemodify(a:file, ':t') . "]"
 
 	if bufnr('^\V' . rcs_diff_name) != -1
-		echohl ErrorMsg
-		echo "Already viewing differences for the current file."
-		echohl None
+                call rcs#alert( 'Already viewing differences for the current file.')
 		return
 	endif
 
@@ -171,7 +167,7 @@ function! s:Diff(file)  " {{{2
 	let scrollopt     = getbufvar(a:file, '&scrollopt')
 	let scrollbind    = getbufvar(a:file, '&scrollbind')
 
-	silent call system( b:sudo . 'co -p ' . s:ShellEscape(a:file) . ' > ' . s:ShellEscape(rcs_diff_file) . ' 2> /dev/null')
+	silent call system( b:sudo . 'co -p ' . rcs#shell_escape(a:file) . ' > ' . rcs#shell_escape(rcs_diff_file) . ' 2> /dev/null')
 	exe 'silent vertical rightbelow diffsplit ' . rcs_diff_file
 	exe 'silent file ' . rcs_diff_name
 	exe 'silent bwipe! ' . rcs_diff_file
@@ -223,9 +219,7 @@ function! s:CheckOut(file, ...)  " {{{2
 	if a:mode == 1 || a:mode ==? 'w'
 		let mode = '-l '
 	elseif a:mode != '0' && a:mode !=? 'ro' && a:mode !=? 'r'
-		echohl ErrorMsg
-		echo 'Unknown argument: ' . a:mode . '  Valid arguments are "r"/"ro" or "w".'
-		echohl None
+		call rcs#alert( 'Unknown argument: ' . a:mode . '  Valid arguments are "r"/"ro" or "w".' )
 		return
 	endif
 
@@ -238,12 +232,12 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 		else
 			let mode = '-f ' . mode
-			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let RCS_Out = system(b:sudo . 'co ' . mode . rcs#shell_escape(a:file))
 		endif
 	elseif filewritable(a:file)
 		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'W') == 1
 			let mode = '-f ' . mode
-			let RCS_Out = system(b:sudo . 'co ' . mode . s:ShellEscape(a:file))
+			let RCS_Out = system(b:sudo . 'co ' . mode . rcs#shell_escape(a:file))
 		elseif a:mode == 1 || a:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
 			let b:RCS_CheckedOut = a:file
 			return
@@ -251,12 +245,12 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 		endif
 	else
-		silent! exe '!rcsdiff ' . s:ShellEscape(a:file) . ' >/dev/null 2>&1'
+		silent! exe '!rcsdiff ' . rcs#shell_escape(a:file) . ' >/dev/null 2>&1'
 		if v:shell_error > 0 && confirm(a:file . " appears to have been modified without being checked out writable (locked) first.\nCheck out anyway (changes, if any, will be lost)?", "&Yes\n&No", 2, 'W') == 2
 			return
 
 		else
-			let co_cmd = b:sudo . 'co ' . mode . s:ShellEscape(a:file)
+			let co_cmd = b:sudo . 'co ' . mode . rcs#shell_escape(a:file)
 			let RCS_Out = system(co_cmd)
 		endif
 	endif
@@ -314,7 +308,7 @@ function! s:write_commit()
     let msg_a = getbufline( '%', 1, '$' )
     let msg_a = filter(msg_a, 'v:val !~ "^\s*#[ ]*RCS"')
     let msg = join( msg_a, "\r" )
-    let msg = s:ShellEscape(msg)
+    let msg = rcs#shell_escape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
     call s:do_rcs_command( b:ci_cmd . " -m" . msg . " ", s:get_rcsfilename() )
     call s:rcs_write_buffer_cleanup()
@@ -358,7 +352,7 @@ function! s:CheckIn(file, ...)  " {{{2
 
 	call setbufvar(a:file, 'RCS_CheckedOut', '')
 
-         " let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . s:ShellEscape(a:file)
+         " let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . rcs#shell_escape(a:file)
         let ci_cmd = b:sudo . " ci -f " . lock_flag
         call s:open_commit(ci_cmd)
         return
@@ -372,7 +366,7 @@ function! s:CheckIn(file, ...)  " {{{2
         endif
 
         if lock_flag == ''
-            let co_cmd = b:sudo . 'co -u ' . s:ShellEscape(a:file)
+            let co_cmd = b:sudo . 'co -u ' . rcs#shell_escape(a:file)
             let RCS_Out = system(co_cmd)
             if v:shell_error 
                 call s:print_error( co_cmd, RCS_Out ) 
@@ -445,7 +439,7 @@ function! s:ViewLog2(file)  " {{{2
 	setlocal noreadonly modifiable
 	let where = s:ByteOffset()
 	silent! 1,$delete
-	exe 'silent 0r !rlog ' . s:ShellEscape(a:file)
+	exe 'silent 0r !rlog ' . rcs#shell_escape(a:file)
 	let keys = [
 			\ '+++ Keys:                                                            +++',
 			\ '+++  <space>     -  Page down                                        +++',
@@ -519,16 +513,12 @@ endfunction
 
 function! s:LogDiff()  " {{{2
 	if ! exists('b:rcs_filename')
-		echohl ErrorMsg
-		echomsg "Can't determine the filename associated with the current log"
-		echohl None
+		call rcs#alert( "Can't determine the filename associated with the current log" )
 		return 0
 	endif
 
 	if len(s:WinLocalVars('&diff')) > 0
-		echohl ErrorMsg
-		echomsg "It appears Vim is already running a diff, close those buffers first."
-		echohl None
+		call rcs#alert( "It appears Vim is already running a diff, close those buffers first." )
 		return 0
 	endif
 
@@ -542,23 +532,21 @@ function! s:LogDiff()  " {{{2
 	endif
 
 	if idarr1[0] == -1 || idarr2[0] == -1
-		echohl ErrorMsg
-		echomsg "Can't determine the revision IDs to diff"
-		echohl None
+		call rcs#alert( "Can't determine the revision IDs to diff" )
 		return 0
 	endif
 
 	let file_escaped=escape(fnamemodify(rcs_filename, ':t'), ' \')
 
 	exe 'silent topleft new [' . file_escaped . ', revision ' . idarr2[0] . ']'
-	silent exe 'read !co -p -r' . idarr2[0] . ' ' . s:ShellEscape(rcs_filename) . ' 2>/dev/null'
+	silent exe 'read !co -p -r' . idarr2[0] . ' ' . rcs#shell_escape(rcs_filename) . ' 2>/dev/null'
 	diffthis
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
         nnoremap <buffer> <nowait> q :bwipe<Cr>
          " nnoremap <buffer> <nowait> j :wincmd j<cr> | :wincmd j
 
 	exe 'silent vertical rightbelow new [' . file_escaped . ', revision ' . idarr1[0] . ']'
-	silent exe 'read !co -p -r' . idarr1[0] . ' ' . s:ShellEscape(rcs_filename) . ' 2>/dev/null'
+	silent exe 'read !co -p -r' . idarr1[0] . ' ' . rcs#shell_escape(rcs_filename) . ' 2>/dev/null'
 	diffthis
 	setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
         nnoremap <buffer> <nowait> q :bwipe<Cr>
@@ -572,9 +560,7 @@ endfunction
 
 function! s:EditLogItem()  " {{{2
 	if ! exists('b:rcs_filename')
-		echohl ErrorMsg
-		echomsg "Can't determine the filename associated with the current log"
-		echohl None
+		call rcs#alert( "Can't determine the filename associated with the current log" )
 		return 0
 	endif
 
@@ -591,9 +577,7 @@ function! s:EditLogItem()  " {{{2
 		let fname =  '[Log entry for ' . fnamemodify(rcs_filename, ':p:t') . ' revision ' . idarr[0] . ']'
 
 		if bufloaded(fname)
-			echohl ErrorMsg
-			echo "A buffer for that log message already exists"
-			echohl None
+			call rcs#alert( "A buffer for that log message already exists" )
 			return 0
 		endif
 
@@ -603,7 +587,7 @@ function! s:EditLogItem()  " {{{2
 		let b:rcs_filename = rcs_filename
                 " re-register b:sudo flag for edit window
                 let b:sudo = do_sudo
-		silent! execute 'read !rlog -r' . idarr[0] . ' ' . s:ShellEscape(rcs_filename)
+		silent! execute 'read !rlog -r' . idarr[0] . ' ' . rcs#shell_escape(rcs_filename)
 		silent! 1,/^revision .\+\ndate: \d\{4\}\/\d\d\/\d\d \d\d:\d\d:\d\d.*/+1 delete
 		silent! $delete
 		call append(0, ["+++ Change the log message below this line and write+quit +++", ''])
@@ -614,9 +598,7 @@ function! s:EditLogItem()  " {{{2
 
 		autocmd BufWriteCmd <buffer> call s:SaveLogItem()
 	else
-		echohl ErrorMsg
-		echom "The cursor isn't within a log section"
-		echohl None
+		call rcs#alert( "The cursor isn't within a log section" )
 		return 0
 	endif
 endfunction
@@ -626,7 +608,7 @@ function! s:do_rcs_command(cmd, file)
     if exists('b:sudo')
         let sudo = b:sudo
     endif
-    let full_cmd  = sudo . a:cmd . ' ' . s:ShellEscape(a:file)
+    let full_cmd  = sudo . a:cmd . ' ' . rcs#shell_escape(a:file)
     let RCS_Out = system( full_cmd )
     if v:shell_error
         call s:print_error(full_cmd, RCS_Out) 
@@ -653,12 +635,12 @@ function! s:SaveLogItem()  " {{{2
 		let fullrlog = '*** empty log message ***'
 	endif
 
-	let fullrlog = s:ShellEscape(fullrlog)
+	let fullrlog = rcs#shell_escape(fullrlog)
 	if v:version >= 702
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let rcs_cmd =  b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . s:ShellEscape(b:rcs_filename)
+	let rcs_cmd =  b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . rcs#shell_escape(b:rcs_filename)
 	let RCS_Out = system(rcs_cmd)
 	if v:shell_error 
             call s:print_error(rcs_cmd, RCS_Out) 
@@ -686,25 +668,11 @@ function! s:WinLocalVars(var)  " {{{2
 endfunction
 
 function! s:print_error(cmd, error)
-    echohl ErrorMsg
-    echo "Nonzero exit status from: " . a:cmd
+    call rcs#alert( "Nonzero exit status from: " . a:cmd )
     echo a:error
-    echohl None
     let v:errmsg = a:error
 endfunction
 
-function! s:ShellEscape(str) " {{{2
-	if exists('*shellescape')
-		return shellescape(a:str)
-	else
-		if has('unix')
-			return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
-		else
-			" Don't know how to properly escape for 'doze, so don't bother:
-		return a:str
-		endif
-	endif
-endfunction
 " }}}1
 
 let &cpoptions = s:savecpo

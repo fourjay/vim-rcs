@@ -5,3 +5,15 @@ function! rcs#alert(message) abort
     echohl None
 endfunction
 
+function! rcs#shell_escape(str) " {{{2
+    if exists('*shellescape')
+        return shellescape(a:str)
+    else
+        if has('unix')
+            return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
+        else
+            " Don't know how to properly escape for 'doze, so don't bother:
+            return a:str
+        endif
+    endif
+endfunction
