@@ -205,16 +205,12 @@
 " }}}1
 
 if v:version < 700
-	echohl ErrorMsg
-	echomsg 'Vim 7.0 or greater is needed to run ' . expand('<sfile>:p')
-	echohl None
+	call rcs#alert('Vim 7.0 or greater is needed to run ' . expand('<sfile>:p') )
 	finish
 endif
 
 if ! has('unix')
-	echohl ErrorMsg
-	echomsg expand('<sfile>:p') . 'will probably not work correctly on non-Unix systems'
-	echohl None
+	call rcs#alert( expand('<sfile>:p') . 'will probably not work correctly on non-Unix systems' )
 	finish
 endif
 
