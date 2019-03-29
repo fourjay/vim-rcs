@@ -27,182 +27,6 @@
 " TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
 "        and from the log display.
 "
-" $Id: rcs.vim,v 1.50 2010/05/16 22:05:12 infynity Exp $
-"
-" ChangeLog: {{{1
-"
-" $Log: rcs.vim,v $
-" Revision 1.50  2010/05/16 22:05:12  infynity
-" Update URL
-"
-" Revision 1.49  2010/05/15 20:19:04  infynity
-" Make :RCSco check for invalid arguments
-"
-" Revision 1.48  2010/04/27 19:49:54  infynity
-" Wasn't actually running the command to force a check out in the event that
-"  the user answered "Yes" to the locked by another user prompt.
-"
-" Revision 1.47  2010/04/27 03:37:35  infynity
-" - Redirect rcsdiff output for checking for unlocked changes to /dev/null
-"   (Jon Peatfield)
-" - Add a check for a lock by another user in the s:CheckOut() routine
-"
-" Revision 1.46  2010/04/24 21:18:49  infynity
-" Prompt the user on checkout if there were "unlocked" changes, suggested
-"  by Jon Peatfield
-"
-" Revision 1.45  2010/04/24 20:17:25  infynity
-" Update version and date
-"
-" Revision 1.44  2010/04/24 20:14:21  infynity
-" Detect RCS's ,v files in the file's cwd as well (Jon Peatfield)
-"
-" Revision 1.43  2009/06/23 14:05:51  infynity
-" Update email address
-"
-" Revision 1.42  2008/08/09 23:44:23  infynity
-" *** empty log message ***
-"
-" Revision 1.41  2008/08/09 23:38:46  infynity
-" Try yet another method of creating/updating the help file
-"
-" Revision 1.40  2008/08/04 07:36:16  infynity
-" - Prompt the user when the file is unwritten and :RCSci is used (Sven Bischof)
-" - Sometimes the help file wasn't being generated--try a different method
-"   (Sven Bischof)
-"
-" Revision 1.39  2008/07/11 16:23:15  infynity
-" Fix error when g:rcs_plugin_* isn't set (Sven Bischof)
-"
-" Revision 1.38  2008/06/15 05:46:46  infynity
-" Try to safely escape shell commands
-"
-" Revision 1.37  2008/06/02 07:11:09  infynity
-" *** empty log message ***
-"
-" Revision 1.36  2008/06/01 08:33:45  infynity
-" Check all windows in all tabs for the 'diff' option
-"
-" Revision 1.35  2008/06/01 03:30:08  infynity
-" Wasn't checking for the 'diff' option properly.
-"
-" Revision 1.34  2008/05/31 02:49:48  infynity
-" - Allow diffing of two consecutive revisions from the log view
-" - Allow folding of the log view
-" - Tweaks
-"
-" Revision 1.33  2008/05/28 20:36:14  infynity
-" *** empty log message ***
-"
-" Revision 1.32  2008/05/27 13:03:33  infynity
-" Make entering the log message a little easier
-"
-" Revision 1.31  2008/05/04 11:10:09  infynity
-" Use matchadd() instead of :2match -- less likelyhood of a "collision" with
-"   another plugin
-"
-" Revision 1.30  2008/04/29 20:36:49  infynity
-" :RCSUpdateHelp {arg} wasn't working
-"
-" Revision 1.29  2008/04/26 19:47:08  infynity
-" Added the :RCSUpdateHelp [directory] command
-"
-" Revision 1.28  2008/04/17 06:11:32  infynity
-" Delay the helpfile auto-update until Vim has initialized so it won't stop gvim
-"  from starting from a non-terminal
-"
-" Revision 1.27  2008/04/16 03:54:31  infynity
-" Enhanced the log display and editing feature
-" Auto-install a help file if possible
-" Refactoring
-"
-" Revision 1.26  2008/04/15 04:58:53  infynity
-" *** empty log message ***
-"
-" Revision 1.25  2008/04/15 04:55:38  infynity
-" Allow editing of individual revision log messages from the log display
-"
-" Revision 1.24  2008/04/08 16:28:31  infynity
-" *** empty log message ***
-"
-" Revision 1.23  2008/04/08 16:19:43  infynity
-" Internal documentation added
-" Code clean up
-"
-" Revision 1.22  2007/08/08 04:16:45  infynity
-" FIleChangedRO autocmd opens folds -- possibly undesirable
-"
-" Revision 1.21  2006/08/23 04:05:17  infynity
-" Perserve cursor position when reloading the buffer after calling co/ci.
-"
-" Revision 1.20  2006/08/14 07:02:17  infynity
-" Changed for Vim7 compatibility.
-"
-" Revision 1.19  2004/04/17 01:52:18  infynity
-" Added copyright information.
-"
-" Revision 1.18  2004/03/22 12:43:24  infynity
-" Fixed detection of existence of diff window for RCS_Diff().
-"
-" Revision 1.17  2004/01/26 22:31:28  infynity
-" Restore 'foldcolumn' when the diff window is closed.
-"
-" Revision 1.16  2003/12/28 15:05:12  infynity
-" Functionalize more stuff.
-" Diffing now handled better, including restoring options when the diff window
-"  is closed
-"
-" Revision 1.15  2003/12/20 06:11:26  infynity
-" Use "setlocal" rather than "set" in some places.
-" Close all folds in both windows when doing a diff view
-"
-" Revision 1.14  2003/10/09 21:36:05  infynity
-" Properly escape $ characters.
-"
-" Revision 1.13  2003/05/23 21:26:48  infynity
-" Change RCSco command call of RCS_CheckOut to use <f-args> rather than <args>.
-"
-" Revision 1.12  2003/04/21 22:21:12  infynity
-" *** empty log message ***
-"
-" Revision 1.11  2003/04/14 00:24:57  infynity
-" *** empty log message ***
-"
-" Revision 1.10  2003/04/13 03:08:30  infynity
-" Syntax highlight the contents of the RCS log window.
-"
-" Revision 1.9  2003/04/13 01:13:50  infynity
-" *** empty log message ***
-"
-" Revision 1.8  2003/04/12 09:35:56  infynity
-" *** empty log message ***
-"
-" Revision 1.7  2003/04/12 09:34:43  infynity
-" Commands for everything added for console vim.
-" Show Log command displays in a vim window.
-" Tweaks.
-"
-" Revision 1.6  2003/04/09 20:58:14  infynity
-" *** empty log message ***
-"
-" Revision 1.5  2003/02/05 09:17:07  infynity
-" Deleted old commented code.
-"
-" Revision 1.4  2002/12/07 00:29:48  infynity
-" Set 'cpoptions' to make sure the file sources properly, then restore it.
-"
-" Revision 1.3  2002/09/06 07:26:26  infynity
-" Moved RCS.Diff menu item contents to RCSdiff command.
-" Use script-local functions &c.
-" Other clean-ups.
-"
-" Revision 1.2  2002/06/29 14:30:00  infynity
-" *** empty log message ***
-"
-" Revision 1.1  2002/06/29 14:10:03  infynity
-" Initial revision
-"
-" }}}1
 
 if v:version < 700
 	call rcs#alert('Vim 7.0 or greater is needed to run ' . expand('<sfile>:p') )
@@ -213,6 +37,13 @@ if ! has('unix')
 	call rcs#alert( expand('<sfile>:p') . 'will probably not work correctly on non-Unix systems' )
 	finish
 endif
+
+if exists("g:loaded_rcs_plugin")
+	let &cpoptions = s:savecpo
+	unlet s:savecpo
+	finish
+endif
+let g:loaded_rcs_plugin = 1
 
 " Auto-update the help file if necessary and possible:  {{{1
 let s:self    = expand('<sfile>')
@@ -267,14 +98,6 @@ if ! exists("g:loaded_rcs_plugin_menu")
 	endif
 endif
 " }}}1
-
-if exists("g:loaded_rcs_plugin")
-	let &cpoptions = s:savecpo
-	unlet s:savecpo
-	finish
-endif
-let g:loaded_rcs_plugin = 1
-
 let b:sudo = ""
 if exists("g:sudo_rcs_plugin")
     let b:sudo = "sudo "
