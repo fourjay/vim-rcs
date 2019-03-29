@@ -38,6 +38,9 @@ if ! has('unix')
 	finish
 endif
 
+let s:savecpo = &cpoptions
+set cpoptions&vim
+
 if exists("g:loaded_rcs_plugin")
 	let &cpoptions = s:savecpo
 	unlet s:savecpo
@@ -45,14 +48,12 @@ if exists("g:loaded_rcs_plugin")
 endif
 let g:loaded_rcs_plugin = 1
 
-" Auto-update the help file if necessary and possible:  {{{1
+" FIXME bad comment Auto-update the help file if necessary and possible:  {{{1
 let s:self    = expand('<sfile>')
  " let s:selfdoc = expand('<sfile>:p:h:h') . '/doc/' . expand('<sfile>:p:t:r') . '.txt'
-let s:savecpo = &cpoptions
-set cpoptions&vim
 
 " Menus: {{{1
-if ! exists("g:loaded_rcs_plugin_menu")
+if ! exists('g:loaded_rcs_plugin_menu')
 	if has('gui_running') || exists('g:rcs_plugin_menu_force')
 		let g:loaded_rcs_plugin_menu = 1
 
