@@ -24,3 +24,14 @@ function! rcs#print_error(cmd, error)
     let v:errmsg = a:error
 endfunction
 
+function! rcs#do_command(cmd, file)
+    let sudo = ''
+    if exists('b:sudo')
+        let sudo = b:sudo
+    endif
+    let full_cmd  = sudo . a:cmd . ' ' . rcs#shell_escape(a:file)
+    let RCS_Out = system( full_cmd )
+    if v:shell_error
+        call rcs#print_error(full_cmd, RCS_Out) 
+    endif
+endfunction
