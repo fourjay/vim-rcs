@@ -310,7 +310,7 @@ function! s:write_commit()
     let msg = join( msg_a, "\r" )
     let msg = rcs#shell_escape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
-    call s:do_rcs_command( b:ci_cmd . " -m" . msg . " ", s:get_rcsfilename() )
+    call rcs#do_command( b:ci_cmd . " -m" . msg . " ", s:get_rcsfilename() )
     call s:rcs_write_buffer_cleanup()
 endfunction
 
@@ -578,17 +578,6 @@ function! s:EditLogItem()  " {{{2
 	endif
 endfunction
 
-function! s:do_rcs_command(cmd, file)
-    let sudo = ''
-    if exists('b:sudo')
-        let sudo = b:sudo
-    endif
-    let full_cmd  = sudo . a:cmd . ' ' . rcs#shell_escape(a:file)
-    let RCS_Out = system( full_cmd )
-    if v:shell_error
-        call rcs#print_error(full_cmd, RCS_Out) 
-    endif
-endfunction
 
 function! s:SaveLogItem()  " {{{2
 	if ! exists('b:rcs_id') || ! exists('b:rcs_filename')
