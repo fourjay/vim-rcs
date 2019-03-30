@@ -99,9 +99,9 @@ if ! exists('g:loaded_rcs_plugin_menu')
 	endif
 endif
 " }}}1
-let b:sudo = ""
-if exists("g:sudo_rcs_plugin")
-    let b:sudo = "sudo "
+let b:sudo = ''
+if exists('g:sudo_rcs_plugin')
+    let b:sudo = 'sudo '
 endif
 
 " Autocommands: {{{1
@@ -127,9 +127,9 @@ command! RCSnostrict :call system( b:sudo . " rcs -U " . expand("%s:p") )
 " Functions: {{{1
 
 function! s:FileChangedRO()  " {{{2
-	if (filereadable(expand('<afile>:p:h') . '/RCS/' . expand("<afile>:t") . ',v')
+	if (filereadable(expand('<afile>:p:h') . '/RCS/' . expand('<afile>:t') . ',v')
 				\ || filereadable(expand('<afile>') . ',v'))
-				\ && (confirm("This is a read-only RCS controlled file, check out?", "&Yes\n&No", 1, "Q") == 1)
+				\ && (confirm('This is a read-only RCS controlled file, check out?', '&Yes\n&No', 1, 'Q') == 1)
 		call s:CheckOut(expand('<afile>:p'), 1)
 		silent! foldopen!
 	endif
@@ -138,18 +138,18 @@ endfunction
 function! s:BufUnload()  " {{{2
 	if getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') != ''
 				\ && (getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') == expand('<afile>:p'))
-				\ && (confirm(expand('<afile>:t') . " is an RCS controlled file checked out by Vim.\nCheck back in?", "&Yes\n&No", 1, "Q") == 1)
+				\ && (confirm(expand('<afile>:t') . ' is an RCS controlled file checked out by Vim.\nCheck back in?', '&Yes\n&No', 1, 'Q') == 1)
 		call s:CheckIn(expand('<afile>:p'), 0)
 	endif
 endfunction
 
 function! s:Diff(file)  " {{{2
 	if len(s:WinLocalVars('&diff')) > 0
-		call rcs#alert( "It appears Vim is already running a diff, close those buffers first." )
+		call rcs#alert( 'It appears Vim is already running a diff, close those buffers first.' )
 		return 0
 	endif
 
-	let rcs_diff_name = "[Previous version of " . fnamemodify(a:file, ':t') . "]"
+	let rcs_diff_name = '[Previous version of ' . fnamemodify(a:file, ':t') . ']'
 
 	if bufnr('^\V' . rcs_diff_name) != -1
                 call rcs#alert( 'Already viewing differences for the current file.')
@@ -268,9 +268,9 @@ function! s:CheckOut(file, ...)  " {{{2
 
 	let eventignore_save = &eventignore
 	let &eventignore = 'BufUnload,FileChangedRO'
-	let l = line(".")
-	let c = col(".")
-	execute "silent e!"
+	let l = line('.')
+	let c = col('.')
+	execute 'silent e!'
 	call cursor(l, c)
 	let &eventignore = eventignore_save
         redraw!
@@ -278,18 +278,18 @@ endfunction
 
 function! s:open_commit(cmd)
     let ci_cmd = a:cmd
-    let log_buf_name = "__RCS_COMMIT_MSG__"
+    let log_buf_name = '__RCS_COMMIT_MSG__'
     let log_win_height = 5
-    let rcs_file = expand("%:p")
+    let rcs_file = expand('%:p')
     call s:set_rcsfilename( rcs_file )
     let b:rcs_filename = rcs_file
-    execute 'keepalt ' . log_win_height . "split " . log_buf_name
+    execute 'keepalt ' . log_win_height . 'split ' . log_buf_name
     if exists( '#User#RCSnewBufferEvent' )
         doautocmd User RCSnewBufferEvent
     endif
-    let rcs_file = expand("%:p")
-    call append(0, "# RCS - write to commit")
-    call append(0, "# RCS - lines beginning with # RCS will be stripped")
+    let rcs_file = expand('%:p')
+    call append(0, '# RCS - write to commit')
+    call append(0, '# RCS - lines beginning with # RCS will be stripped')
     setlocal textwidth=70
     setlocal noswapfile
     setlocal buftype=acwrite
@@ -310,7 +310,7 @@ function! s:write_commit()
     let msg = join( msg_a, "\r" )
     let msg = rcs#shell_escape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
-    call rcs#do_privileged_command( b:ci_cmd . " -m" . msg . " " . rcs#shell_escape( s:get_rcsfilename()) )
+    call rcs#do_privileged_command( b:ci_cmd . ' -m' . msg . ' ' . rcs#shell_escape( s:get_rcsfilename()) )
     call s:rcs_write_buffer_cleanup()
 endfunction
 
@@ -488,12 +488,12 @@ endfunction
 
 function! s:LogDiff()  " {{{2
 	if ! exists('b:rcs_filename')
-		call rcs#alert( "Can't determine the filename associated with the current log" )
+		call rcs#alert( 'Can't determine the filename associated with the current log' )
 		return 0
 	endif
 
 	if len(s:WinLocalVars('&diff')) > 0
-		call rcs#alert( "It appears Vim is already running a diff, close those buffers first." )
+		call rcs#alert( 'It appears Vim is already running a diff, close those buffers first.' )
 		return 0
 	endif
 
@@ -552,7 +552,7 @@ function! s:EditLogItem()  " {{{2
 		let fname =  '[Log entry for ' . fnamemodify(rcs_filename, ':p:t') . ' revision ' . idarr[0] . ']'
 
 		if bufloaded(fname)
-			call rcs#alert( "A buffer for that log message already exists" )
+			call rcs#alert( 'A buffer for that log message already exists' )
 			return 0
 		endif
 
@@ -565,7 +565,7 @@ function! s:EditLogItem()  " {{{2
 		silent! execute 'read !rlog -r' . idarr[0] . ' ' . rcs#shell_escape(rcs_filename)
 		silent! 1,/^revision .\+\ndate: \d\{4\}\/\d\d\/\d\d \d\d:\d\d:\d\d.*/+1 delete
 		silent! $delete
-		call append(0, ["+++ Change the log message below this line and write+quit +++", ''])
+		call append(0, ['+++ Change the log message below this line and write+quit +++', ''])
 		setlocal nomodified
 
 		syntax match rcslogKeys =^\%<2l+++ .\+ +++$=
@@ -604,7 +604,7 @@ function! s:SaveLogItem()  " {{{2
 		let fullrlog = substitute(fullrlog, '\\'."\n", "\n", 'g')
 	endif
 
-	let rcs_cmd =  b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . rcs#shell_escape(b:rcs_filename)
+	let rcs_cmd =  b:sudo . 'rcs -m' . b:rcs_id  . ':' . fullrlog . ' ' . rcs#shell_escape(b:rcs_filename)
 	let RCS_Out = system(rcs_cmd)
 	if v:shell_error 
             call rcs#print_error(rcs_cmd, RCS_Out) 
@@ -614,7 +614,7 @@ function! s:SaveLogItem()  " {{{2
 endfunction
 
 function! s:ByteOffset()  " {{{2
-	let offset = line2byte(line(".")) + col(".") - 1
+	let offset = line2byte(line('.')) + col(".") - 1
 	return (offset < 1 ? 1 : offset)
 endfunction
 
