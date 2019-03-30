@@ -51,3 +51,11 @@ function! rcs#do_privileged_command(cmd) abort
     let l:full_cmd  = sudo . a:cmd
     call rcs#do_command( l:full_cmd )
 endfunction
+
+function! rcs#get_sudo() abort
+    if exists('b:sudo')
+        return b:sudo
+    else
+        return ''
+    endif
+endfunction

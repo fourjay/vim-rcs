@@ -391,7 +391,7 @@ function! s:ViewLog(file) abort
 	let file_escaped=escape(fnamemodify(a:file, ':t'), ' \')
 
         " store b:sudo for new window
-        let l:do_sudo = b:sudo
+        let l:do_sudo = rcs#get_sudo()
 	exe 'silent topleft new [RCS\ log\ for\ ' . file_escaped . ']'
 	let b:rcs_filename = a:file
         " re-register b:sudo
@@ -450,7 +450,7 @@ endfunction
 
 function! s:LogHighlight() abort
 	let curline = line('.')
-	let idarr = s:GetLogId(curline)
+	let idarr = rcs#log#get_id(curline)
 
 	if idarr[0] != -1
 		if exists('b:rcsmatchid')
@@ -467,25 +467,6 @@ function! s:LogHighlight() abort
 	"  /^-\+\(\n\(-\+\)\@!.\+\)*\%#.*\(\n\(-\+\)\@!.\+\)*
 endfunction
 
-function! s:GetLogId(line) abort
-	let offset = s:ByteOffset()
-	call cursor(a:line, 0)
-
-	let back    = search('^-\+\nrevision \d\+\.\d\+', 'bWn')
-	let forward = search('^-\+$', 'Wn')
-
-	exe 'go ' . offset
-
-	if back > 0 && a:line >= back && a:line <= forward && getline('.') !~ '^-\+$'
-		let line = getline(back + 1)
-		let id   = substitute(line, 'revision \(\d\+\.\d\+\).*', '\1', '')
-
-		return [id, back, forward]
-	else
-		return [-1, -1, -1]
-	endif
-endfunction
-
 function! s:LogDiff() abort
 	if ! exists('b:rcs_filename')
 		call rcs#alert( 'Can't determine the filename associated with the current log' )
@@ -500,10 +481,10 @@ function! s:LogDiff() abort
 	let rcs_filename = b:rcs_filename
 
 	let curline = line('.')
-	let idarr1 = s:GetLogId(curline)
+	let idarr1 = rcs#log#get_id(curline)
 
 	if idarr1[0] != -1
-		let idarr2 = s:GetLogId(idarr1[2] + 1)
+		let idarr2 = rcs#log#get_id(idarr1[2] + 1)
 	endif
 
 	if idarr1[0] == -1 || idarr2[0] == -1
@@ -546,7 +527,7 @@ function! s:EditLogItem() abort
         let do_sudo = b:sudo
 
 	let curline = line('.')
-	let idarr = s:GetLogId(curline)
+	let idarr = rcs#log#get_id(curline)
 
 	if idarr[0] != -1
 		let fname =  '[Log entry for ' . fnamemodify(rcs_filename, ':p:t') . ' revision ' . idarr[0] . ']'
