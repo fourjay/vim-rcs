@@ -397,7 +397,7 @@ function! s:ViewLog(file) abort
         " re-register b:sudo
         let b:sudo = l:do_sudo
 
-	call s:ViewLog2(a:file)
+	call s:load_rcs_log(a:file)
 
         set filetype=rlog
 
@@ -405,16 +405,16 @@ function! s:ViewLog(file) abort
 
 	nnoremap <silent> <buffer> <cr> :call <SID>EditLogItem()<CR>
 	nnoremap <silent> <buffer> d :call <SID>LogDiff()<CR>
-	nnoremap <silent> <buffer> <c-l> <c-l>:call <SID>ViewLog2(b:rcs_filename)<CR>
+	nnoremap <silent> <buffer> <c-l> <c-l>:call <SID>load_rcs_log(b:rcs_filename)<CR>
 
 	autocmd CursorMoved <buffer> call s:LogHighlight()
 endfunction
 
-function! s:ViewLog2(file) abort
+function! s:load_rcs_log(file) abort
 	setlocal noreadonly modifiable
 	let where = s:ByteOffset()
 	silent! 1,$delete
-	exe 'silent 0r !rlog ' . rcs#shell_escape(a:file)
+	execute 'silent 0r !rlog ' . rcs#shell_escape(a:file)
 	let keys = [
 			\ '+++ Keys:                                                            +++',
 			\ '+++  <space>     -  Page down                                        +++',
