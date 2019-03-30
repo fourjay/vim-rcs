@@ -40,7 +40,9 @@ function! rcs#do_command(cmd) abort
     endif
     if v:shell_error
         call rcs#print_error(a:cmd, l:rcs_output)
+        return
     endif
+    return l:rcs_output
 endfunction
 
 function! rcs#do_privileged_command(cmd) abort
