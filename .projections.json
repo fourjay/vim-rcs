@@ -18,7 +18,7 @@
     "syntax/*.vim": {
         "type": "syntax"
     },
-    "tests/*.vader": {
+    "t/*.vader": {
         "alternate": "autoload/{}.vim",
         "make": "vim -c Vader t/*",
         "type": "test"

@@ -18,13 +18,21 @@ function! rcs#shell_escape(str) " {{{2
     endif
 endfunction
 
-function! rcs#print_error(cmd, error)
+function! rcs#print_error(cmd, error) abort
     call rcs#alert( 'Nonzero exit status from: ' . a:cmd )
     echo a:error
     let v:errmsg = a:error
 endfunction
 
-function! rcs#do_command(cmd, file)
+let s:only_print = 0
+function! rcs#only_print_command(...) abort
+    if a:0 != 0
+        let s:only_print = a:1
+    endif
+    return s:only_print
+endfunction
+
+function! rcs#do_command(cmd, file) abort
     let sudo = ''
     if exists('b:sudo')
         let sudo = b:sudo

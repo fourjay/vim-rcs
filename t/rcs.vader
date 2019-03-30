@@ -1,0 +1,12 @@
+" Given (input description):
+"   Input text
+
+Execute (test onlyprint getter setter):
+  AssertEqual rcs#only_print_command(),  0
+
+Before (set only print):
+  call rcs#only_print_command(1)
+
+Execute (test onlyprint getter setter):
+  AssertEqual rcs#only_print_command(),  1
+
