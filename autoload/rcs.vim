@@ -33,7 +33,7 @@ function! rcs#only_print_command(...) abort
 endfunction
 
 function! rcs#do_command(cmd) abort
-    if rcs#only_print_command()
+    if rcs#only_print_command() != 0
         return a:cmd
     else
         let l:rcs_output = system( a:cmd )
