@@ -310,7 +310,7 @@ function! s:write_commit()
     let msg = join( msg_a, "\r" )
     let msg = rcs#shell_escape(msg)
     let msg = substitute(msg, '\\'."\n", "\n", 'g')
-    call rcs#do_command( b:ci_cmd . " -m" . msg . " ", s:get_rcsfilename() )
+    call rcs#do_privileged_command( b:ci_cmd . " -m" . msg . " " . rcs#shell_escape( s:get_rcsfilename()) )
     call s:rcs_write_buffer_cleanup()
 endfunction
 

@@ -32,14 +32,22 @@ function! rcs#only_print_command(...) abort
     return s:only_print
 endfunction
 
-function! rcs#do_command(cmd, file) abort
+function! rcs#do_command(cmd) abort
+    if rcs#only_print_command()
+        return a:cmd
+    else
+        let l:rcs_output = system( a:cmd )
+    endif
+    if v:shell_error
+        call rcs#print_error(a:cmd, l:rcs_output)
+    endif
+endfunction
+
+function! rcs#do_privileged_command(cmd) abort
     let sudo = ''
     if exists('b:sudo')
         let sudo = b:sudo
     endif
-    let full_cmd  = sudo . a:cmd . ' ' . rcs#shell_escape(a:file)
-    let RCS_Out = system( full_cmd )
-    if v:shell_error
-        call rcs#print_error(full_cmd, RCS_Out) 
-    endif
+    let l:full_cmd  = sudo . a:cmd
+    call rcs#do_command( l:full_cmd )
 endfunction
