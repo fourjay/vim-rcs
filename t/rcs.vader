@@ -1,12 +1,16 @@
 " Given (input description):
 "   Input text
 
-Execute (test onlyprint getter setter):
+Execute (initial onlyprint getter setter):
+  call rcs#only_print_command(0)
   AssertEqual rcs#only_print_command(),  0
+  Log "ouput of " . rcs#do_command('echo')
+  Assert rcs#do_command( 'echo hi') == ''
 
 Before (set only print):
   call rcs#only_print_command(1)
 
-Execute (test onlyprint getter setter):
+Execute (test mocked do_command):
   AssertEqual rcs#only_print_command(),  1
+  AssertEqual rcs#do_command( 'echo hi'), 'echo hi'
 
