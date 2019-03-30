@@ -1,0 +1,26 @@
+{
+    "README.md": {
+        "type": "readme"
+    },
+    "autoload/*.vim": {
+        "alternate": "t/{}.vader",
+        "type": "autoload"
+    },
+    "doc/*.txt": {
+        "type": "doc"
+    },
+    "ftplugin/*.vim": {
+        "type": "ftplugin"
+    },
+    "plugin/rcs.vim": {
+        "type": "plugin"
+    },
+    "syntax/*.vim": {
+        "type": "syntax"
+    },
+    "tests/*.vader": {
+        "alternate": "autoload/{}.vim",
+        "make": "vim -c Vader t/*",
+        "type": "test"
+    }
+}
