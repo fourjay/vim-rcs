@@ -5,7 +5,7 @@ function! rcs#alert(message) abort
     echohl None
 endfunction
 
-function! rcs#shell_escape(str) " {{{2
+function! rcs#shell_escape(str) abort
     if exists('*shellescape')
         return shellescape(a:str)
     else
