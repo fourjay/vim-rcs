@@ -304,7 +304,7 @@ function! s:open_commit(cmd) abort
 endfunction
 
 function! s:write_commit() abort
-     " echom "in write_commit " . b:ci_cmd
+     " echom 'in write_commit ' . b:ci_cmd
     let msg_a = getbufline( '%', 1, '$' )
     let msg_a = filter(msg_a, 'v:val !~ "^\s*#[ ]*RCS"')
     let msg = join( msg_a, "\r" )
@@ -412,7 +412,6 @@ endfunction
 
 function! s:load_rcs_log(file) abort
 	setlocal noreadonly modifiable
-	let where = s:ByteOffset()
 	silent! 1,$delete
 	execute 'silent 0r !rlog ' . rcs#shell_escape(a:file)
 	let keys = [
@@ -429,7 +428,7 @@ function! s:load_rcs_log(file) abort
 	call append(0, keys)
 	setlocal readonly nomodifiable
 	1 " Go to the first line in the file.
-	silent! execute 'goto ' . where
+	silent! goto 1
 
 	exe 'syntax match rcslogKeys   =^\%<' . (len(keys) + 1) . 'l+++ .\+ +++$='
 endfunction
@@ -592,11 +591,6 @@ function! s:SaveLogItem() abort
         endif
 
 	setlocal nomodified
-endfunction
-
-function! s:ByteOffset() abort
-	let offset = line2byte(line('.')) + col(".") - 1
-	return (offset < 1 ? 1 : offset)
 endfunction
 
 function! s:WinLocalVars(var) abort
