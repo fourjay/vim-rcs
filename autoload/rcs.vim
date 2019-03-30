@@ -17,3 +17,10 @@ function! rcs#shell_escape(str) " {{{2
         endif
     endif
 endfunction
+
+function! rcs#print_error(cmd, error)
+    call rcs#alert( 'Nonzero exit status from: ' . a:cmd )
+    echo a:error
+    let v:errmsg = a:error
+endfunction
+

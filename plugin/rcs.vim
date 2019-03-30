@@ -256,7 +256,7 @@ function! s:CheckOut(file, ...)  " {{{2
 	endif
 
 	if v:shell_error
-		call s:print_error( co_cmd, RCS_Out)
+		call rcs#print_error( co_cmd, RCS_Out)
 		return 1
 	endif
 
@@ -294,7 +294,7 @@ function! s:open_commit(cmd)
     setlocal noswapfile
     setlocal buftype=acwrite
     setlocal bufhidden=wipe
-    setlocal ft=rcscommit
+    setlocal filetype=rcscommit
     setlocal syntax=conf
     nnoremap <buffer> ZZ :write<cr>
     let b:rcs_filename = rcs_file
@@ -358,7 +358,7 @@ function! s:CheckIn(file, ...)  " {{{2
         return
 	let RCS_Out = system( ci_cmd )
         if v:shell_error
-            call s:print_error( ci_cmd, RCS_Out )
+            call rcs#print_error( ci_cmd, RCS_Out )
         else
             if exists( '#User#RCSciEvent' )
                 doautocmd User RCSciEvent
@@ -369,7 +369,7 @@ function! s:CheckIn(file, ...)  " {{{2
             let co_cmd = b:sudo . 'co -u ' . rcs#shell_escape(a:file)
             let RCS_Out = system(co_cmd)
             if v:shell_error 
-                call s:print_error( co_cmd, RCS_Out ) 
+                call rcs#print_error( co_cmd, RCS_Out ) 
             endif
         endif
 
@@ -611,7 +611,7 @@ function! s:do_rcs_command(cmd, file)
     let full_cmd  = sudo . a:cmd . ' ' . rcs#shell_escape(a:file)
     let RCS_Out = system( full_cmd )
     if v:shell_error
-        call s:print_error(full_cmd, RCS_Out) 
+        call rcs#print_error(full_cmd, RCS_Out) 
     endif
 endfunction
 
@@ -643,7 +643,7 @@ function! s:SaveLogItem()  " {{{2
 	let rcs_cmd =  b:sudo . "rcs -m" . b:rcs_id  . ":" . fullrlog . " " . rcs#shell_escape(b:rcs_filename)
 	let RCS_Out = system(rcs_cmd)
 	if v:shell_error 
-            call s:print_error(rcs_cmd, RCS_Out) 
+            call rcs#print_error(rcs_cmd, RCS_Out) 
         endif
 
 	setlocal nomodified
@@ -665,12 +665,6 @@ function! s:WinLocalVars(var)  " {{{2
 		endfor
 	endfor
 	return vals
-endfunction
-
-function! s:print_error(cmd, error)
-    call rcs#alert( "Nonzero exit status from: " . a:cmd )
-    echo a:error
-    let v:errmsg = a:error
 endfunction
 
 " }}}1
