@@ -211,15 +211,15 @@ function! s:CheckForLock(file) " {{{2
 endfunction
 
 function! s:CheckOut(file, ...)  " {{{2
-	let mode = ''
+	let l:mode = ''
 
         if a:0 == 0
-            let a:mode = 'w'
+            let l:mode = 'w'
         endif
-	if a:mode == 1 || a:mode ==? 'w'
+	if l:mode == 1 || l:mode ==? 'w'
 		let mode = '-l '
-	elseif a:mode != '0' && a:mode !=? 'ro' && a:mode !=? 'r'
-		call rcs#alert( 'Unknown argument: ' . a:mode . '  Valid arguments are "r"/"ro" or "w".' )
+	elseif l:mode != '0' && l:mode !=? 'ro' && l:mode !=? 'r'
+		call rcs#alert( 'Unknown argument: ' . l:mode . '  Valid arguments are "r"/"ro" or "w".' )
 		return
 	endif
 
@@ -231,14 +231,14 @@ function! s:CheckOut(file, ...)  " {{{2
 		if confirm(confirm_promt, "&Yes\n&No", 2, 'W') == 2
 			return
 		else
-			let mode = '-f ' . mode
-			let RCS_Out = system(b:sudo . 'co ' . mode . rcs#shell_escape(a:file))
+			let l:mode = '-f ' . l:mode
+			let RCS_Out = system(b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file))
 		endif
 	elseif filewritable(a:file)
 		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'W') == 1
-			let mode = '-f ' . mode
-			let RCS_Out = system(b:sudo . 'co ' . mode . rcs#shell_escape(a:file))
-		elseif a:mode == 1 || a:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
+			let l:mode = '-f ' . l:mode
+			let RCS_Out = system(b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file))
+		elseif l:mode == 1 || l:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
 			let b:RCS_CheckedOut = a:file
 			return
 		else
@@ -250,7 +250,7 @@ function! s:CheckOut(file, ...)  " {{{2
 			return
 
 		else
-			let co_cmd = b:sudo . 'co ' . mode . rcs#shell_escape(a:file)
+			let co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
 			let RCS_Out = system(co_cmd)
 		endif
 	endif
@@ -260,7 +260,7 @@ function! s:CheckOut(file, ...)  " {{{2
 		return 1
 	endif
 
-	if a:mode == 1 || a:mode == 'w'
+	if l:mode == 1 || l:mode == 'w'
 		let b:RCS_CheckedOut = a:file
 	elseif exists('b:RCS_CheckedOut')
 		let b:RCS_CheckedOut = ''
