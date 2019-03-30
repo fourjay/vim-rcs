@@ -73,6 +73,13 @@ command! RCSwork call s:CheckIn(expand("%:p"), "lock" )
 
 command! RCSnostrict :call system( b:sudo . " rcs -U " . expand("%s:p") )
 
+ " command! -complete=custom,<SID>short_complete -nargs=? RCS execute "RCS" . expand('\<args>')
+
+function! s:short_complete(...) abort
+    return "diff\nlog\nco\nci\nsudo\nwork\nnostrict\n"
+endfunction
+
+
 " Functions: {{{1
 
 function! s:FileChangedRO() abort
@@ -374,7 +381,7 @@ function! s:load_rcs_log(file) abort
 endfunction
 
 function! RCSFoldLog() abort
-	if getline(v:lnum) =~ '^+++ .\+ +++$'
+	if getline(v:lnum) =~# '^+++ .\+ +++$'
 		return 1
 	endif
 	if getline(v:lnum) == '' && getline(v:lnum - 1) =~ '^+++ .\+ +++$'
