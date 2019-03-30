@@ -48,67 +48,16 @@ if exists("g:loaded_rcs_plugin")
 endif
 let g:loaded_rcs_plugin = 1
 
-" FIXME bad comment Auto-update the help file if necessary and possible:  {{{1
-let s:self    = expand('<sfile>')
- " let s:selfdoc = expand('<sfile>:p:h:h') . '/doc/' . expand('<sfile>:p:t:r') . '.txt'
-
-" Menus: {{{1
-if ! exists('g:loaded_rcs_plugin_menu')
-	if has('gui_running') || exists('g:rcs_plugin_menu_force')
-		let g:loaded_rcs_plugin_menu = 1
-
-		if ! exists('g:rcs_plugin_toplevel_menu')
-			let g:rcs_plugin_toplevel_menu = ''
-		endif
-		if ! exists('g:rcs_plugin_menu_priority')
-			let g:rcs_plugin_menu_priority = ''
-		endif
-
-		let s:m = g:rcs_plugin_toplevel_menu
-		let s:p = g:rcs_plugin_menu_priority
-
-		if s:m != '' && s:m[-1:] != '.'
-			let s:m = s:m . '.'
-		endif
-
-		if s:p[-1:] != '.'
-			let s:p = s:p . '.'
-		endif
-
-		" exe 'amenu <silent> ' . s:p . '10 ' . s:m .
-		" 	\ '&RCS.Lock                                  :!rcs -l %<CR>'
-		" exe 'amenu <silent> ' . s:p . '20 ' . s:m .
-		" 	\ '&RCS.UnLock                                :!rcs -u %<CR>'
-		exe 'amenu <silent> ' . s:p . '30 ' . s:m .
-			\ '&RCS.&Diff<Tab>:RCSdiff                  :RCSdiff<CR>'
-		exe 'amenu <silent> ' . s:p . '40 ' . s:m .
-			\ '&RCS.Show\ &&\ Edit\ &Log<Tab>:RCSlog    :RCSlog<CR>'
-		exe 'amenu <silent> ' . s:p . '60 ' . s:m .
-			\ "&RCS.Check\\ Out\\ [&RO]<Tab>:RCSco\\ ro :RCSco ro<CR>"
-		exe 'amenu <silent> ' . s:p . '60 ' . s:m .
-			\ "&RCS.Check\\ Out\\ [&W]<Tab>:RCSco\\ w   :RCSco w<CR>"
-		exe 'amenu <silent> ' . s:p . '70 ' . s:m .
-			\ '&RCS.Check\ &In<Tab>:RCSci               :RCSci<CR>'
-
-		unlet s:m s:p
-	else
-		augroup RCS_plugin_menu
-			au!
-			exe 'autocmd GUIEnter * source ' . expand('<sfile>')
-		augroup END
-	endif
-endif
-" }}}1
 let b:sudo = ''
 if exists('g:sudo_rcs_plugin')
     let b:sudo = 'sudo '
 endif
 
 " Autocommands: {{{1
-augroup RCS_plugin
-	au!
-	autocmd BufUnload * nested call s:BufUnload()
-augroup END
+ " augroup RCS_plugin
+	 " au!
+	 " autocmd BufUnload * nested call s:BufUnload()
+ " augroup END
 
 " Commands: {{{1
 command!          RCSdiff call s:Diff(expand("%:p"))
@@ -217,8 +166,8 @@ function! s:CheckOut(file, ...) abort
             let l:mode = 'w'
         endif
 	if l:mode == 1 || l:mode ==? 'w'
-		let l:mode = '-l '
-	elseif l:mode != 'w' && l:mode !=? 'ro' && l:mode !=? 'r'
+		let l:mode = 'l'
+	elseif l:mode !=? 'w' && l:mode !=? 'ro' && l:mode !=? 'r'
 		call rcs#alert( 'Unknown argument: ' . l:mode . '  Valid arguments are "r"/"ro" or "w".' )
 		return
 	endif
@@ -233,6 +182,7 @@ function! s:CheckOut(file, ...) abort
 		else
 			let l:mode = '-f ' . l:mode
 			let RCS_Out = system(b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file))
+                        autocmd <buffer>  BufUnload * nested call s:BufUnload()
 		endif
 	elseif filewritable(a:file)
 		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'W') == 1
@@ -414,17 +364,7 @@ function! s:load_rcs_log(file) abort
 	setlocal noreadonly modifiable
 	silent! 1,$delete
 	execute 'silent 0r !rlog ' . rcs#shell_escape(a:file)
-	let keys = [
-			\ '+++ Keys:                                                            +++',
-			\ '+++  <space>     -  Page down                                        +++',
-			\ '+++  b           -  Page up                                          +++',
-			\ '+++  <control-l> -  Refresh the screen and reload the log            +++',
-			\ '+++  J           -  Jump to next log section                         +++',
-			\ '+++  K           -  Jump to previous log section                     +++',
-			\ "+++  <enter>     -  Edit the current revision entry's message        +++",
-			\ "+++  d           -  Diff the current revision with the previous one  +++",
-			\ '+++  q           -  Close this log view                              +++',
-		\ ]
+	let keys = [ '+++ HELP: [JK] navigate log sections | <Cr> edit log section | [d] diff +++' ]
 	call append(0, keys)
 	setlocal readonly nomodifiable
 	1 " Go to the first line in the file.
