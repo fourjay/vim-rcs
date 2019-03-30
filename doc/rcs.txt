@@ -1,104 +1,59 @@
-*rcs.txt*	Assist with editing RCS controlled files.
-		Last Change: April 27, 2010
-		Author: Christian J. Robinson
+*rcs*    wrapper around RCS leveraging vim where helpul
 
-					*rcs.vim* *rcs*
+Help on using rcs                                                    *rcs*
 
-This is a set of autocommands, commands, and a menu to help you handle RCS
-controlled files.  It requires Vim 7.0 or later to run.
+1. Introduction                                                 | rcs-intro|
+2. Commands                                                 | rcs-commands|
+3. Configuration                                        | rcs-configuration|
+4. Other                                                        | rcs-other|
+
+==============================================================================
+1. INTRODUCTION                                                  *rcs-intro*
+
+This wraps RCS commands to vim commands. It leverages vim's strengths, in
+particular diffs and commit messages, as well as speeding up the work cycle.
+
+This is inspired (and built on) a venerable vim plugin:
+
+https://www.vim.org/scripts/script.php?script_id=1111
+
+But this version differs in significant ways. In particular:
+
+* This version ditches GUI menu options
+* The assumed workflow de-emphasize the lock unlock cycle. In light of 
+  all the modern VCS systems, I'm reluctant to emphasize this aspect of
+  rcs. Instead this plugin assumes that RCS will be primarily used as a 
+  quick way for a single developer to quickly add version control without
+  larger commitment a more modern VCS entails. It is optimized to continual
+  incremental checkin and locking.
+* This plugin uses modern file structure, assuming the install will be through
+  a runtimepath manager. The original was written as a single script.
+* sudo use is expected and encouraged. One of my driving use cases was bringing
+  ad-hoc config changes under control.
+==============================================================================
+2. COMMANDS                                              *rcs-commands*
+
+
+
+|'RCSco'|        rcs co --> Takes a r/w option
+
+|'RCSci'|        rcs ci --> checks in the file. Opens a normal commit message 
+                     split, which will be written.
+
+|'RClog'|        rlog --> Opens a split with "live" rlog. Versions chunks can be
+                     * diffed (d key) against the current version
+                     * edited (<CR>) opens an editing buffer for the commit message
+
+|'RCSsudo'|      sets buffer to use sudo for check-in. This is automatically set when 
+                 using the :w! function of Tim Popes eunuch plugin or Christian
+                 https://www.vim.org/scripts/script.php?script_id=1111
+
+|'RCSwork'|      Automates a check-in check-out workcycle. 
+
+|'RCSnostrict'|  rcs -U --> set "unstrict" locking in RCS on the current file
 
 ------------------------------------------------------------------------------
-
-1. Introduction				|rcs-intro|
-2. Commands				|rcs-commands|
-3. Configuration Variables		|rcs-configuration|
-
-==============================================================================
-1. Introduction					*rcs-intro*
-
-If you try to modify a readonly file that has a RCS/<file>,v counterpart you
-will be asked if you want to check the file out for modification, and when
-you unload the buffer you'll be prompted if you want to check the file back
-in, and allowed to enter a log message.
-
-The commands have corresponding menu items, which should be fairly
-self-explanatory.
-
-The log message uses a vim buffer. A write event will commit the
-message. This follows CVS convention where lines beginning with
-<
-# RCS
->
-will be deleted
-
-==============================================================================
-2. Commands					*rcs-commands*
-
-						*:RCSdiff*
-:RCSdiff
-	View the differences between the working file and the last revision,
-	using vimdiff.
-
-						*:RCSlog*
-:RCSlog
-	Show the entire log file--syntax highlighted--in a split window.
-	Individual log entries can be edited from this display.  And you can
-	show the differences between two consecutive versions.
-
-						*:RCSco*
-:RCSco ro
-	Check out the current file readonly (unlocked).
-
-:RCSco w
-        This is the default when no option is passed
-
-	Check out the current file writable (locked).
-	
-	With either use of the ":RCSco" command, Vim will ask if you want to
-	discard changes if you already have a locked/modifiable file
-
-
-						*:RCSci*
-:RCSci
-	Check the current (changed) file in, you will be prompted for a log
-	message, and the file will automatically be checked back out
-	readonly.
-
-						*:RCSwork*
-:RCSWork
-	Combine ci and co -l, to contine to "work" on a file. You will
-        be prompted for checkin messge
-	
-						*:RCSsudo*
-:RCSsudo
-	Set the RCS commands to use sudo on a per buffer basis. This
-        allows editing and versioning configuration files from a more
-        full featured user account (in conjunction with one of the many
-        su write tools such as SudoWrite).
-
-						*:RCSnostrict*
-:RCSnostrict
-	Set non-strict locking
-	
-==============================================================================
-3. Configuration Variables			*rcs-configuration*
-
-*g:rcs_plugin_toplevel_menu*
-The name of the menu to place the RCS menu into, if you don't want it at the
-top level.
-
-*g:rcs_plugin_menu_priority*
-The menu priority to use for the RCS menu.
-
-*g:rcs_plugin_menu_force*
-Force loading of the menu in console Vim.
-
-Examples: >
- :let g:rcs_plugin_toplevel_menu = '&Misc'
- :let g:rcs_plugin_menu_priority = '130.10'
- :let g:rcs_plugin_menu_force = 1
-<
-
+                                *'rcs-option1'*
 *RCSciEvent*
 User command called when ci is completed
 
@@ -109,3 +64,11 @@ Example: >
 *RCSnewBufferEvent*
 User command called when new commit message buffer is created.
 Add custom behavior to commit message buffer
+
+==============================================================================
+3. OTHER                                                         *rcs-other*
+
+The git archive still has tracking information, like ChangeLog info from the 
+original plugin.
+
+This fork is maintained by Josef Fortier josef.fortier+rcs-vim@gmail.com
