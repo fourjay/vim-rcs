@@ -3,7 +3,7 @@
         "type": "readme"
     },
     "autoload/*.vim": {
-        "alternate": "t/{}.vader",
+        "alternate": "t/{basename}.vader",
         "type": "autoload"
     },
     "doc/*.txt": {
@@ -19,7 +19,10 @@
         "type": "syntax"
     },
     "t/*.vader": {
-        "alternate": "autoload/{}.vim",
+        "alternate": [
+            "autoload/{}.vim",
+            "autoload/rcs/{}.vim"
+        ],
         "make": "vim -c Vader t/*",
         "type": "test"
     }
