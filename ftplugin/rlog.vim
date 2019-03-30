@@ -12,5 +12,12 @@ set cpo&vim
 setlocal buftype=nofile noswapfile readonly nomodifiable bufhidden=wipe
 setlocal foldexpr=RCSFoldLog() foldmethod=expr
 
+nnoremap <buffer> <nowait> q <C-w>c
+nnoremap <buffer> <space> <C-f>
+nnoremap <buffer> b <C-b>
+nnoremap <silent> <buffer> J :if search('^-\+\nrevision \d\+\.\d\+', 'W')<bar>exe 'normal! j'<bar>endif<CR>
+nnoremap <silent> <buffer> K :call search('^revision \d\+\.\d\+', 'Wb')<CR>
+      \:call search('^-\+\nrevision \d\+\.\d\+', 'Wb')<CR>j
+
 "reset &cpo back to users setting
 let &cpo = s:save_cpo

@@ -403,12 +403,6 @@ function! s:ViewLog(file)  " {{{2
 
 	normal! zR
 
-	nnoremap <buffer> <nowait> q <C-w>c
-	nnoremap <buffer> <space> <C-f>
-	nnoremap <buffer> b <C-b>
-	nnoremap <silent> <buffer> J :if search('^-\+\nrevision \d\+\.\d\+', 'W')<bar>exe 'normal! j'<bar>endif<CR>
-	nnoremap <silent> <buffer> K :call search('^revision \d\+\.\d\+', 'Wb')<CR>
-				\:call search('^-\+\nrevision \d\+\.\d\+', 'Wb')<CR>j
 	nnoremap <silent> <buffer> <cr> :call <SID>EditLogItem()<CR>
 	nnoremap <silent> <buffer> d :call <SID>LogDiff()<CR>
 	nnoremap <silent> <buffer> <c-l> <c-l>:call <SID>ViewLog2(b:rcs_filename)<CR>
