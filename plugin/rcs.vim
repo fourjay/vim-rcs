@@ -115,7 +115,7 @@ command!          RCSdiff call s:Diff(expand("%:p"))
 command!          RCSlog  call s:ViewLog(expand("%:p"))
 command! -complete=custom,<SID>rcscomplete -nargs=? RCSco   call s:CheckOut(expand("%:p"), <f-args>)
 command! -nargs=? RCSci   call s:CheckIn(expand("%:p"))
-function! s:rcscomplete(...)
+function! s:rcscomplete(...) abort
     return "w\nro\n"
 endfunction
 
@@ -126,7 +126,7 @@ command! RCSnostrict :call system( b:sudo . " rcs -U " . expand("%s:p") )
 
 " Functions: {{{1
 
-function! s:FileChangedRO()  " {{{2
+function! s:FileChangedRO() abort
 	if (filereadable(expand('<afile>:p:h') . '/RCS/' . expand('<afile>:t') . ',v')
 				\ || filereadable(expand('<afile>') . ',v'))
 				\ && (confirm('This is a read-only RCS controlled file, check out?', '&Yes\n&No', 1, 'Q') == 1)
@@ -135,7 +135,7 @@ function! s:FileChangedRO()  " {{{2
 	endif
 endfunction
 
-function! s:BufUnload()  " {{{2
+function! s:BufUnload() abort
 	if getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') != ''
 				\ && (getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') == expand('<afile>:p'))
 				\ && (confirm(expand('<afile>:t') . ' is an RCS controlled file checked out by Vim.\nCheck back in?', '&Yes\n&No', 1, 'Q') == 1)
@@ -143,7 +143,7 @@ function! s:BufUnload()  " {{{2
 	endif
 endfunction
 
-function! s:Diff(file)  " {{{2
+function! s:Diff(file) abort
 	if len(s:WinLocalVars('&diff')) > 0
 		call rcs#alert( 'It appears Vim is already running a diff, close those buffers first.' )
 		return 0
@@ -191,7 +191,7 @@ function! s:Diff(file)  " {{{2
 	normal! zX
 endfunction
 
-function! s:CheckForLock(file) " {{{2
+function! s:CheckForLock(file) abort
 	let rlog_out = split(system('rlog -L -h ' . a:file), '\n')
 	if len(rlog_out) == 0
 		return ''
@@ -210,7 +210,7 @@ function! s:CheckForLock(file) " {{{2
 	return locker
 endfunction
 
-function! s:CheckOut(file, ...)  " {{{2
+function! s:CheckOut(file, ...) abort
 	let l:mode = ''
 
         if a:0 == 0
@@ -276,7 +276,7 @@ function! s:CheckOut(file, ...)  " {{{2
         redraw!
 endfunction
 
-function! s:open_commit(cmd)
+function! s:open_commit(cmd) abort
     let ci_cmd = a:cmd
     let log_buf_name = '__RCS_COMMIT_MSG__'
     let log_win_height = 5
@@ -303,7 +303,7 @@ function! s:open_commit(cmd)
     autocmd BufWritePost <buffer> call s:rcs_write_buffer_cleanup( )
 endfunction
 
-function! s:write_commit()
+function! s:write_commit() abort
      " echom "in write_commit " . b:ci_cmd
     let msg_a = getbufline( '%', 1, '$' )
     let msg_a = filter(msg_a, 'v:val !~ "^\s*#[ ]*RCS"')
@@ -314,7 +314,7 @@ function! s:write_commit()
     call s:rcs_write_buffer_cleanup()
 endfunction
 
-function! s:rcs_write_buffer_cleanup()
+function! s:rcs_write_buffer_cleanup() abort
     let rcs_cleanup_window = bufnr('__RCS_COMMIT_MSG__')
     let current_window = bufnr('%')
     if rcs_cleanup_window != ''
@@ -331,15 +331,15 @@ function! s:rcs_write_buffer_cleanup()
 endfunction
 
 let s:rcs_filename = ''
-function! s:set_rcsfilename(filename)
+function! s:set_rcsfilename(filename) abort
     let s:rcs_filename = a:filename
 endfunction
 
-function! s:get_rcsfilename()
+function! s:get_rcsfilename() abort
         return s:rcs_filename
 endfunction
 
-function! s:CheckIn(file, ...)  " {{{2
+function! s:CheckIn(file, ...) abort
 	if (getbufvar(a:file, '&modified') == 1)
 				\ && (confirm(fnamemodify(a:file, ':t') . " has unwritten changes, check in anyway?", "&Yes\n&No", 2, "Q") != 1)
 		return
@@ -387,7 +387,7 @@ function! s:CheckIn(file, ...)  " {{{2
         redraw!
 endfunction
 
-function! s:ViewLog(file)  " {{{2
+function! s:ViewLog(file) abort
 	let file_escaped=escape(fnamemodify(a:file, ':t'), ' \')
 
         " store b:sudo for new window
@@ -410,7 +410,7 @@ function! s:ViewLog(file)  " {{{2
 	autocmd CursorMoved <buffer> call s:LogHighlight()
 endfunction
 
-function! s:ViewLog2(file)  " {{{2
+function! s:ViewLog2(file) abort
 	setlocal noreadonly modifiable
 	let where = s:ByteOffset()
 	silent! 1,$delete
@@ -434,7 +434,7 @@ function! s:ViewLog2(file)  " {{{2
 	exe 'syntax match rcslogKeys   =^\%<' . (len(keys) + 1) . 'l+++ .\+ +++$='
 endfunction
 
-function! RCSFoldLog()  " {{{2
+function! RCSFoldLog() abort
 	if getline(v:lnum) =~ '^+++ .\+ +++$'
 		return 1
 	endif
@@ -448,7 +448,7 @@ function! RCSFoldLog()  " {{{2
 	return '='
 endfunction
 
-function! s:LogHighlight()  " {{{2
+function! s:LogHighlight() abort
 	let curline = line('.')
 	let idarr = s:GetLogId(curline)
 
@@ -467,7 +467,7 @@ function! s:LogHighlight()  " {{{2
 	"  /^-\+\(\n\(-\+\)\@!.\+\)*\%#.*\(\n\(-\+\)\@!.\+\)*
 endfunction
 
-function! s:GetLogId(line)  " {{{2
+function! s:GetLogId(line) abort
 	let offset = s:ByteOffset()
 	call cursor(a:line, 0)
 
@@ -486,7 +486,7 @@ function! s:GetLogId(line)  " {{{2
 	endif
 endfunction
 
-function! s:LogDiff()  " {{{2
+function! s:LogDiff() abort
 	if ! exists('b:rcs_filename')
 		call rcs#alert( 'Can't determine the filename associated with the current log' )
 		return 0
@@ -533,7 +533,7 @@ function! s:LogDiff()  " {{{2
 	1
 endfunction
 
-function! s:EditLogItem()  " {{{2
+function! s:EditLogItem() abort
 	if ! exists('b:rcs_filename')
 		call rcs#alert( "Can't determine the filename associated with the current log" )
 		return 0
@@ -579,7 +579,7 @@ function! s:EditLogItem()  " {{{2
 endfunction
 
 
-function! s:SaveLogItem()  " {{{2
+function! s:SaveLogItem() abort
 	if ! exists('b:rcs_id') || ! exists('b:rcs_filename')
 		return 0
 	endif
@@ -613,12 +613,12 @@ function! s:SaveLogItem()  " {{{2
 	setlocal nomodified
 endfunction
 
-function! s:ByteOffset()  " {{{2
+function! s:ByteOffset() abort
 	let offset = line2byte(line('.')) + col(".") - 1
 	return (offset < 1 ? 1 : offset)
 endfunction
 
-function! s:WinLocalVars(var)  " {{{2
+function! s:WinLocalVars(var) abort
 	let vals = []
 	for i in range(1, tabpagenr('$'))
 		for j in range(1, tabpagewinnr(i, '$'))
