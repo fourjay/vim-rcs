@@ -48,6 +48,9 @@ But this version differs in significant ways. In particular:
                  using the :w! function of Tim Popes eunuch plugin or Christian
                  https://www.vim.org/scripts/script.php?script_id=1111
 
+|'RCSdiff'|      rcsdiff --> apply diff split against most recent
+                 checked in version
+
 |'RCSwork'|      Automates a check-in check-out workcycle. 
 
 |'RCSnostrict'|  rcs -U --> set "unstrict" locking in RCS on the current file
@@ -71,4 +74,5 @@ Add custom behavior to commit message buffer
 The git archive still has tracking information, like ChangeLog info from the 
 original plugin.
 
-This fork is maintained by Josef Fortier josef.fortier+rcs-vim@gmail.com
+This fork is maintained by
+Josef Fortier at https://github.com/fourjay/vim-rcs
