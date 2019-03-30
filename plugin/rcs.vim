@@ -469,7 +469,7 @@ endfunction
 
 function! s:LogDiff() abort
 	if ! exists('b:rcs_filename')
-		call rcs#alert( 'Can't determine the filename associated with the current log' )
+		call rcs#alert( 'Cannot determine the filename associated with the current log' )
 		return 0
 	endif
 
