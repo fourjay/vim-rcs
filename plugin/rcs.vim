@@ -48,10 +48,15 @@ endif
 "# Commands
 command!          RCSdiff call s:Diff(expand("%:p"))
 command!          RCSlog  call s:ViewLog(expand("%:p"))
-command! -complete=custom,<SID>rcscomplete -nargs=? RCSco   call s:CheckOut(expand("%:p"), <f-args>)
+command! -complete=custom,<SID>checkout_complete -nargs=? RCSco   call s:CheckOut(expand("%:p"), <f-args>)
 command! -nargs=? RCSci   call s:CheckIn(expand("%:p"))
-function! s:rcscomplete(...) abort
-    return "w\nro\n"
+function! s:checkout_complete(arglead, cmdline, cursor) abort
+    if a:arglead ==# ''
+        return "w\nro\n"
+    elseif a:arglead !~# '^\(w\|ro\|\r\)'
+        let l:rcs_files = system('ls RCS/*,v | sed -e "s/RCS\///" -e "s/,v//"')
+        return l:rcs_files
+    endif
 endfunction
 
 command! RCSsudo let b:sudo="sudo "
