@@ -61,3 +61,9 @@ function! rcs#get_sudo() abort
         return ''
     endif
 endfunction
+
+function! rcs#file_is_modified(file) abort
+    silent! execute '!rcsdiff ' . rcs#shell_escape(a:file) . ' >/dev/null 2>&1'
+    redraw!
+    return v:shell_error > 0
+endfunction
