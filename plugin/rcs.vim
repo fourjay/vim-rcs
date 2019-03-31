@@ -20,6 +20,7 @@
 " TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
 "        and from the log display.
 "
+"# Guards
 if ! executable('rcs') ||
             \ exists('g:loaded_rcs_plugin')
     finish
@@ -44,13 +45,7 @@ if exists('g:sudo_rcs_plugin')
     let b:sudo = 'sudo '
 endif
 
-" Autocommands: {{{1
- " augroup RCS_plugin
-	 " au!
-	 " autocmd BufUnload * nested call s:BufUnload()
- " augroup END
-
-" Commands: {{{1
+"# Commands
 command!          RCSdiff call s:Diff(expand("%:p"))
 command!          RCSlog  call s:ViewLog(expand("%:p"))
 command! -complete=custom,<SID>rcscomplete -nargs=? RCSco   call s:CheckOut(expand("%:p"), <f-args>)
@@ -71,7 +66,7 @@ function! s:short_complete(...) abort
 endfunction
 
 
-" Functions: {{{1
+"# Functions
 
 function! s:FileChangedRO() abort
 	if (filereadable(expand('<afile>:p:h') . '/RCS/' . expand('<afile>:t') . ',v')
@@ -179,7 +174,7 @@ function! s:CheckOut(file, ...) abort
 			return
 
 		else
-			let co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
+			let co_cmd = b:sudo . 'co -' . l:mode . ' ' . rcs#shell_escape(a:file)
 			let RCS_Out = system(co_cmd)
 		endif
 	endif
