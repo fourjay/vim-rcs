@@ -147,39 +147,20 @@ function! s:Diff(file) abort
 	normal! zX
 endfunction
 
-function! s:CheckForLock(file) abort
-	let rlog_out = split(system('rlog -L -h ' . a:file), '\n')
-	if len(rlog_out) == 0
-		return ''
-	endif
-
-	let locker = ''
-	let index = 0
-	while index < len(rlog_out)
-		if rlog_out[index] =~? '\slocked by: \S\+;'
-			let locker = substitute(rlog_out[index], '.*\slocked by: \(\S\+\);.*', '\1', '')
-			break
-		endif
-		let index = index + 1
-	endwhile
-
-	return locker
-endfunction
-
 function! s:CheckOut(file, ...) abort
 	let l:mode = ''
 
         if a:0 == 0
             let l:mode = 'w'
         endif
-	if l:mode == 1 || l:mode ==? 'w'
+	if a:0 == 1 || l:mode ==? 'w'
 		let l:mode = 'l'
 	elseif l:mode !=? 'w' && l:mode !=? 'ro' && l:mode !=? 'r'
 		call rcs#alert( 'Unknown argument: ' . l:mode . '  Valid arguments are "r"/"ro" or "w".' )
 		return
 	endif
 
-	let locker = s:CheckForLock(a:file)
+	let locker = rcs#log#get_locker(a:file)
 
 	if locker != '' && locker != $LOGNAME . 'a'
 		let confirm_promt =                 a:file . " appears to have been locked by username '" . locker . "'.\n"

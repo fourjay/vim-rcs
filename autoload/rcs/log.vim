@@ -20,3 +20,24 @@ function! rcs#log#get_id(line) abort
         return [-1, -1, -1]
     endif
 endfunction
+
+" function! s:CheckForLock(file) abort
+function! rcs#log#get_locker(file) abort
+    " let rlog_out = split(system('rlog -L -h ' . a:file), '\n')
+    let l:rlog_output = rcs#do_command('rlog -L ' . a:file)
+    let l:rlog_lines = split(l:rlog_output,  "\n")
+    if len(l:rlog_lines) == 0
+        return ''
+    endif
+
+    let locker = ''
+    let index = 0
+    for l:line in l:rlog_lines
+        if l:line =~? '\slocked by: \S\+;'
+            let l:locker = substitute(l:line, '.*\slocked by: ', '', '')
+            let l:locker = substitute(l:locker, ';.*', '', '')
+            return l:locker
+        endif
+    endfor
+    return ''
+endfunction
