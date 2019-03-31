@@ -1,8 +1,10 @@
-" vim600:fdm=marker:fdc=3:cms=\ "\ %s:fml=2:tw=76:
-"
 " ----------------------------------------------------------------------------
-" rcs.vim -- Automatically handle RCS controlled files.
+" rcs.vim -- Wrapper around RCS
 "
+" Currently forked by Josef Fortier
+" https://github.com/fourjay/vim-rcs
+"
+" Last maintainer
 " Author:      Christian J. Robinson <heptite@gmail.com>
 " URL:         http://christianrobinson.name/vim/
 " Last Change: April 27, 2010
@@ -11,22 +13,17 @@
 " Copyright (C) 2002-2010 Christian J. Robinson <heptite@gmail.com>
 " Distributed under the terms of the Vim license.  See ":help license".
 "
-" Install Details: -----------------------------------------------------------
-"
-" Make the following directories (this script will probably not work on
-" non-Unix systems):
-"   ~/.vim/plugin
-"   ~/.vim/doc
-"
-" Place this script in the plugin directory, then start Vim. The
-" documentation should automatically be created. Then you can do:
-"   :help rcs.txt
 "
 " ----------------------------------------------------------------------------
 "
+" From Christian
 " TODO:  Allow diffing between two arbitrary revisions, both with :RCSdiff
 "        and from the log display.
 "
+if ! executable('rcs') ||
+            \ exists('g:loaded_rcs_plugin')
+    finish
+endif
 
 if v:version < 700
 	call rcs#alert('Vim 7.0 or greater is needed to run ' . expand('<sfile>:p') )
@@ -40,12 +37,6 @@ endif
 
 let s:savecpo = &cpoptions
 set cpoptions&vim
-
-if exists("g:loaded_rcs_plugin")
-	let &cpoptions = s:savecpo
-	unlet s:savecpo
-	finish
-endif
 let g:loaded_rcs_plugin = 1
 
 let b:sudo = ''
