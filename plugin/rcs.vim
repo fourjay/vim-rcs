@@ -83,7 +83,6 @@ function! s:FileChangedRO() abort
 endfunction
 
 function! s:BufUnload() abort
-        echom 'file is ' . expand('<afile'>)
 	if getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') != ''
 				\ && (getbufvar(expand('<afile>:p'), 'RCS_CheckedOut') == expand('<afile>:p'))
 				\ && (confirm(expand('<afile>:t') . ' is an RCS controlled file checked out by Vim.\nCheck back in?', '&Yes\n&No', 1, 'Q') == 1)
