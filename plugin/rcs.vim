@@ -146,43 +146,52 @@ function! s:CheckOut(file, ...) abort
 		return
 	endif
 
+        let l:mode = ' -' . l:mode . ' '
+
 	let locker = rcs#log#get_locker(a:file)
 
-	if locker != '' && locker != $LOGNAME . 'a'
-		let confirm_promt =                 a:file . " appears to have been locked by username '" . locker . "'.\n"
+	if locker != '' && locker != $LOGNAME
+		let confirm_promt =                 a:file . " appears to have been locked by username '" . locker . "' instead of '" . $LOGNAME . "'.\n"
                 let confirm_promt = confirm_promt . "Force a check out anyway (this could cause loss of data)?"
 		if confirm(confirm_promt, "&Yes\n&No", 2, 'W') == 2
 			return
 		else
 			let l:mode = '-f ' . l:mode
-			let RCS_Out = system(b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file))
-                        autocmd <buffer>  BufUnload * nested call s:BufUnload()
+			let l:co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
+			let RCS_Out = rcs#do_command(l:co_cmd)
 		endif
 	elseif filewritable(a:file)
 		if confirm(a:file . " is writable (locked).\nForce a check out of previous version (your changes will be lost)?", "&Yes\n&No", 2, 'W') == 1
 			let l:mode = '-f ' . l:mode
-			let RCS_Out = system(b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file))
-		elseif l:mode == 1 || l:mode == 'w' && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
+			let l:co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
+			let RCS_Out = rcs#do_command(l:co_cmd)
+		elseif l:mode == 1 || l:mode == 'w' 
+                            \ && confirm('Tell Vim this is a controlled RCS file anyway?', "&Yes\n&No", 1, 'Q') == 1
 			let b:RCS_CheckedOut = a:file
 			return
 		else
 			return
 		endif
 	else
-		silent! exe '!rcsdiff ' . rcs#shell_escape(a:file) . ' >/dev/null 2>&1'
-		if v:shell_error > 0 && confirm(a:file . " appears to have been modified without being checked out writable (locked) first.\nCheck out anyway (changes, if any, will be lost)?", "&Yes\n&No", 2, 'W') == 2
-			return
+		if rcs#file_is_modified(a:file)
+                    let l:answer = confirm(
+                                \ a:file . ' appears to have been modified without being checked out writable (locked) first.\n'
+                                \ . 'Check out anyway (changes, if any, will be lost)?'
+                                \ , "&Yes\n&No", 2, 'W')
+                    if l:answer == 2 | return | endif
 
 		else
-			let co_cmd = b:sudo . 'co -' . l:mode . ' ' . rcs#shell_escape(a:file)
-			let RCS_Out = system(co_cmd)
+			let co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
+			 " let RCS_Out = system(co_cmd)
+			let RCS_Out = rcs#do_command(co_cmd)
 		endif
 	endif
+        autocmd BufUnload <buffer> * nested call <SID>BufUnload()
 
-	if v:shell_error
-		call rcs#print_error( co_cmd, RCS_Out)
-		return 1
-	endif
+	" if v:shell_error
+	" 	call rcs#print_error('checkou command. RCS_Out)
+	" 	return 1
+	" endif
 
 	if l:mode == 1 || l:mode == 'w'
 		let b:RCS_CheckedOut = a:file
