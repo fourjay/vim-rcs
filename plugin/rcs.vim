@@ -203,7 +203,6 @@ function! s:CheckOut(file, mode)
             return
         endif
     else
-        echom 'before filereadable'
         if filereadable(a:file) && rcs#file_is_modified(a:file)
             let l:answer = confirm(
                         \ a:file . ' appears to have been modified without being checked out writable (locked) first.\n'
