@@ -46,11 +46,11 @@ function! rcs#do_command(cmd) abort
 endfunction
 
 function! rcs#do_privileged_command(cmd) abort
-    let sudo = ''
+    let l:sudo = ''
     if exists('b:sudo')
-        let sudo = b:sudo
+        let l:sudo = b:sudo
     endif
-    let l:full_cmd  = sudo . a:cmd
+    let l:full_cmd  = l:sudo . a:cmd
     call rcs#do_command( l:full_cmd )
 endfunction
 
