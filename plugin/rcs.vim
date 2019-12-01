@@ -296,7 +296,7 @@ function! s:get_rcsfilename() abort
         return s:rcs_filename
 endfunction
 
-function! s:CheckIn(file, ...) abort
+function! s:CheckIn(file) abort
     if (getbufvar(a:file, '&modified') == 1)
                 \ && (confirm(fnamemodify(a:file, ':t') . " has unwritten changes, check in anyway?", "&Yes\n&No", 2, "Q") != 1)
         return
@@ -310,7 +310,11 @@ function! s:CheckIn(file, ...) abort
     call setbufvar(a:file, 'RCS_CheckedOut', '')
 
         " let ci_cmd = b:sudo . " ci -f " . lock_flag . " -m" . fullrlog  . " " . rcs#shell_escape(a:file)
-    let ci_cmd = b:sudo . " ci -f " . lock_flag
+    let l:sudo = ''
+    if exists('b:sudo')
+        let l:sudo = b:sudo
+    endif
+    let ci_cmd = l:sudo . " ci -f " . lock_flag
     call s:open_commit(ci_cmd)
     return
     let RCS_Out = rcs#do_command( ci_cmd )
@@ -319,7 +323,7 @@ function! s:CheckIn(file, ...) abort
     endif
 
     if lock_flag == ''
-        let co_cmd = b:sudo . 'co -u ' . rcs#shell_escape(a:file)
+        let co_cmd = l:sudo . 'co -u ' . rcs#shell_escape(a:file)
         let RCS_Out = rcs#do_command(co_cmd)
     endif
 
