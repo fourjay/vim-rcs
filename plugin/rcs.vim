@@ -48,11 +48,11 @@ endif
 "# Commands
 command!          RCSdiff call s:Diff(expand("%:p"))
 command!          RCSlog  call s:ViewLog(expand("%:p"))
-command! -complete=custom,<SID>checkout_complete -nargs=? RCSco   call s:CheckOut(expand("%:p"), <f-args>)
+command! -complete=custom,s:checkout_complete -nargs=* RCSco call s:do_checkout_cmd(<f-args>)
 command! -nargs=? RCSci   call s:CheckIn(expand("%:p"))
 function! s:checkout_complete(arglead, cmdline, cursor) abort
     if a:arglead ==# ''
-        return "w\nro\n"
+        return join( rcs#get_versioned_list(), "\n") . "w\nr\n"
     elseif a:arglead !~# '^\(w\|ro\|\r\)'
         let l:rcs_files = system('ls RCS/*,v | sed -e "s/RCS\///" -e "s/,v//"')
         return l:rcs_files
@@ -138,20 +138,45 @@ function! s:Diff(file) abort
     normal! zX
 endfunction
 
-function! s:CheckOut(file, ...) abort
-    let l:mode = ''
+function! s:mode_translation(mode) abort
+    let mode_table = {
+                \ 'r' : '',
+                \ 'w' : ' -l ',
+                \ }
+    return mode_table[ a:mode ]
+endfunction
 
-        if a:0 == 0
-            let l:mode = 'w'
+function! s:do_checkout_cmd(...) abort
+    let l:file = ''
+    if len(expand('%')) > 0
+        let l:file = expand('%:p')
+    endif
+    let l:mode = ' -l '
+    if a:0 >= 1
+        if a:1 ==# 'w' || a:1 ==# 'r'
+            let l:mode = s:mode_translation(a:1)
+        else
+            let l:file = a:1
         endif
-    if a:0 == 1 || l:mode ==? 'w'
-        let l:mode = 'l'
-    elseif l:mode !=? 'w' && l:mode !=? 'ro' && l:mode !=? 'r'
-        call rcs#alert( 'Unknown argument: ' . l:mode . '  Valid arguments are "r"/"ro" or "w".' )
+    elseif a:0 == 2
+        let l:mode = s:mode_translation(a:2)
+    endif
+    if ! rcs#is_versioned(l:file)
+        call rcs#alert('file ' . l:file . ' is not versioned') | return
+    endif
+    call s:CheckOut(l:file, l:mode)
+endfunction
+
+" function! s:CheckOut(file, mode) abort
+function! s:CheckOut(file, mode)
+    if a:mode !=? ' -l ' && a:mode !=? ''
+        call rcs#alert( 'Unknown argument: ' . a:mode . '  Valid arguments are "r"/"ro" or "w".' )
         return
     endif
+    
+    let l:mode = a:mode
 
-    let l:mode = ' -' . l:mode . ' '
+    if ! exists('b:sudo') | let b:sudo = '' | endif
 
     let locker = rcs#log#get_locker(a:file)
 
@@ -178,7 +203,8 @@ function! s:CheckOut(file, ...) abort
             return
         endif
     else
-        if rcs#file_is_modified(a:file)
+        echom 'before filereadable'
+        if filereadable(a:file) && rcs#file_is_modified(a:file)
             let l:answer = confirm(
                         \ a:file . ' appears to have been modified without being checked out writable (locked) first.\n'
                         \ . 'Check out anyway (changes, if any, will be lost)?'
@@ -186,6 +212,7 @@ function! s:CheckOut(file, ...) abort
             if l:answer == 2 | return | endif
         else
             let co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
+            echom 'co_cmd ' . co_cmd
             let RCS_Out = rcs#do_command(co_cmd)
         endif
     endif
@@ -202,7 +229,7 @@ function! s:CheckOut(file, ...) abort
     let &eventignore = 'BufUnload,FileChangedRO'
     let l = line('.')
     let c = col('.')
-    execute 'silent e!'
+    execute 'silent e! ' . a:file
     call cursor(l, c)
     let &eventignore = eventignore_save
     redraw!
