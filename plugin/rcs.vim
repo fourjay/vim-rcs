@@ -211,7 +211,6 @@ function! s:CheckOut(file, mode)
             if l:answer == 2 | return | endif
         else
             let co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
-            echom 'co_cmd ' . co_cmd
             let RCS_Out = rcs#do_command(co_cmd)
         endif
     endif
