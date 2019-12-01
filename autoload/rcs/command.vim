@@ -21,5 +21,19 @@ function! rcs#command#new(command) abort
                     \ . self.mode . ' '
     endfunction
 
+    function! l:commend.set_mode(mode) abort
+        if a:mode == 'w' || a:mode == 'l' || a:mode = '-l'
+            self.command = '-l'
+        endif
+    endfunction
+
+    function! l:commend.is_locked() abort
+        if self.command == '-l'
+            return 1
+        else
+            return 0
+        endif
+    endfunction
+
     return l:command
 endfunction
