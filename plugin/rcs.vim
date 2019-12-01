@@ -179,24 +179,18 @@ function! s:CheckOut(file, ...) abort
         endif
     else
         if rcs#file_is_modified(a:file)
-                    let l:answer = confirm(
-                                \ a:file . ' appears to have been modified without being checked out writable (locked) first.\n'
-                                \ . 'Check out anyway (changes, if any, will be lost)?'
-                                \ , "&Yes\n&No", 2, 'W')
-                    if l:answer == 2 | return | endif
-
+            let l:answer = confirm(
+                        \ a:file . ' appears to have been modified without being checked out writable (locked) first.\n'
+                        \ . 'Check out anyway (changes, if any, will be lost)?'
+                        \ , "&Yes\n&No", 2, 'W')
+            if l:answer == 2 | return | endif
         else
             let co_cmd = b:sudo . 'co ' . l:mode . rcs#shell_escape(a:file)
             let RCS_Out = rcs#do_command(co_cmd)
         endif
     endif
-        let b:RCS_CheckedOut = a:file
-        autocmd BufUnload <buffer> * nested call <SID>BufUnload()
-
-    " if v:shell_error
-    "   call rcs#print_error('checkou command. RCS_Out)
-    "   return 1
-    " endif
+    let b:RCS_CheckedOut = a:file
+    autocmd BufUnload <buffer> * nested call <SID>BufUnload()
 
     if l:mode == 1 || l:mode == 'w'
         let b:RCS_CheckedOut = a:file
@@ -211,7 +205,7 @@ function! s:CheckOut(file, ...) abort
     execute 'silent e!'
     call cursor(l, c)
     let &eventignore = eventignore_save
-        redraw!
+    redraw!
 endfunction
 
 function! s:open_commit(cmd) abort
