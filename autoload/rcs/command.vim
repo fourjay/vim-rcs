@@ -11,6 +11,10 @@ function! rcs#command#new(command) abort
     endif
 
     function! l:command.string() abort dict
+        if len(self.command) == 0
+            rcs#alert('no command')
+            return ''
+        endif
         return self.sudo . ' '
                     \ . self.command . ' '
                     \ . self.force . ' '
