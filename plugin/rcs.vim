@@ -51,11 +51,11 @@ command!          RCSlog  call s:ViewLog(expand("%:p"))
 command! -complete=custom,s:checkout_complete -nargs=* RCSco call s:do_checkout_cmd(<f-args>)
 command! -nargs=? RCSci   call s:CheckIn(expand("%:p"))
 function! s:checkout_complete(arglead, cmdline, cursor) abort
+     let l:files = join( rcs#get_versioned_list(), "\n")
     if a:arglead ==# ''
-        return join( rcs#get_versioned_list(), "\n") . "w\nr\n"
+        return l:files . "\nw\nr\n"
     elseif a:arglead !~# '^\(w\|ro\|\r\)'
-        let l:rcs_files = system('ls RCS/*,v | sed -e "s/RCS\///" -e "s/,v//"')
-        return l:rcs_files
+        return l:files
     endif
 endfunction
 
