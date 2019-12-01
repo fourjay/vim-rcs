@@ -181,9 +181,9 @@ function! s:CheckOut(file, mode)
     let locker = rcs#log#get_locker(a:file)
 
     if locker != '' && locker != $LOGNAME
-        let confirm_prompt = a:file . " appears to have been locked by username '" . locker . "' instead of '" . $LOGNAME . "'.\n"
-        let confirm_prompt = confirm_promt . "Force a check out anyway (this could cause loss of data)?"
-        if confirm(confirm_promt, "&Yes\n&No", 2, 'W') == 2
+        let l:confirm_prompt  = a:file . " appears to have been locked by username '" . locker . "' instead of '" . $LOGNAME . "'.\n"
+        let l:confirm_prompt .= "Force a check out anyway (this could cause loss of data)?"
+        if confirm(l:confirm_prompt, "&Yes\n&No", 2, 'W') == 2
             return
         else
             let l:mode = '-f ' . l:mode
