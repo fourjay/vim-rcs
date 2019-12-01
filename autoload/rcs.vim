@@ -69,7 +69,7 @@ function! rcs#file_is_modified(file) abort
 endfunction
 
 function! rcs#is_versioned(filename) abort
-    " cleverish wat to find RCS/* and root level
+    " cleverish way to find RCS/* and root level
     let l:versioned = glob('**/*,v', 1, 1)
     call filter(l:versioned, 'v:val =~# "' . a:filename . ',v"')
     return len(l:versioned)
