@@ -74,3 +74,10 @@ function! rcs#is_versioned(filename) abort
     call filter(l:versioned, 'v:val =~# "' . a:filename . ',v"')
     return len(l:versioned)
 endfunction
+
+function! rcs#get_versioned_list() abort
+    let l:versioned = glob('**/*,v', 1, 1)
+    call map(l:versioned, 'substitute( v:val, "RCS/", "", "")' )
+    call map(l:versioned, 'substitute( v:val, ",v", "", "")' )
+    return l:versioned
+endfunction
